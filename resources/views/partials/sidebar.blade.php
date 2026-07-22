@@ -42,6 +42,9 @@
                 <li class="nav-item">
                     <a href="{{ route('dragon-ownings.index') }}" class="nav-link"><span class="pcoded-micon"><i class="feather icon-user"></i></span><span class="pcoded-mtext">Dragon Owning</span></a>
                 </li>
+                <li class="nav-item">
+                    <a href="{{ route('orb-ownings.index') }}" class="nav-link"><span class="pcoded-micon"><i class="feather icon-bell"></i></span><span class="pcoded-mtext">Orb Owning</span></a>
+                </li>
             </ul>
         </div>
     </div>

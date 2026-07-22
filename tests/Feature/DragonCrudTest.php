@@ -86,4 +86,17 @@ class DragonCrudTest extends TestCase
             'rarity_id' => null,
         ]);
     }
+
+    public function test_user_can_mark_dragon_as_best_heroic(): void
+    {
+        $dragon = Dragon::factory()->create(['is_best_heroic' => false]);
+
+        $response = $this->post(route('dragons.markBestHeroic', $dragon));
+
+        $response->assertRedirect(route('dragons.index'));
+        $this->assertDatabaseHas('dragons', [
+            'id' => $dragon->id,
+            'is_best_heroic' => true,
+        ]);
+    }
 }

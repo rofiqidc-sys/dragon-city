@@ -57,6 +57,26 @@ Thank you for considering contributing to the Laravel framework! The contributio
 
 In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
 
+## Project Commands
+
+Use the custom migration helper to run only the newest migration file:
+
+```bash
+php artisan migrate:new
+```
+
+If you want the same graceful behavior as normal migrations, run:
+
+```bash
+php artisan migrate:new --graceful
+```
+
+If Mythical or Heroic values were incorrectly stored as elements, repair affected dragons with:
+
+```bash
+php artisan dragon:repair-rarity
+```
+
 ## Security Vulnerabilities
 
 If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.

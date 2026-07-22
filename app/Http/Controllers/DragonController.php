@@ -13,6 +13,10 @@ class DragonController extends Controller
 {
     public function index(Request $request)
     {
+        $sort = $request->input('sort', 'asc');
+        $direction = strtolower($sort) === 'desc' ? 'desc' : 'asc';
+        $rarities = Rarity::orderBy('name')->get();
+
         $dragons = Dragon::with('rarity', 'element1', 'element2', 'element3', 'element4')
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = Str::lower(trim($request->input('search')));
@@ -30,11 +34,14 @@ class DragonController extends Controller
                         ->orWhereHas('element4', fn ($elementQuery) => $elementQuery->whereRaw('LOWER(name) LIKE ?', [$pattern]));
                 });
             })
-            ->latest()
-            ->paginate(24)
+            ->when($request->filled('rarity'), function ($query) use ($request) {
+                $query->whereHas('rarity', fn ($rarityQuery) => $rarityQuery->where('id', $request->input('rarity')));
+            })
+            ->orderBy('dragon_book', $direction)
+            ->paginate(12)
             ->withQueryString();
 
-        return view('dragons.index', compact('dragons'));
+        return view('dragons.index', compact('dragons', 'rarities'));
     }
 
     public function create()
@@ -213,6 +220,15 @@ class DragonController extends Controller
         $dragon->delete();
 
         return redirect()->route('dragons.index')->with('success', 'Dragon deleted successfully.');
+    }
+
+    public function markBestHeroic(Dragon $dragon)
+    {
+        if (! $dragon->is_best_heroic) {
+            $dragon->update(['is_best_heroic' => true]);
+        }
+
+        return redirect()->route('dragons.index')->with('success', 'Dragon marked as Best Heroic.');
     }
 
     public function truncate()

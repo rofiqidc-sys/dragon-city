@@ -58,4 +58,29 @@ HTML;
         $this->assertSame(['Fire'], $dragons[0]['element']);
         $this->assertSame('Very Rare', $dragons[0]['rarity']);
     }
+
+    public function test_it_parses_mythical_and_heroic_as_rarity(): void
+    {
+        $html = <<<'HTML'
+<div class="mw-content-ltr mw-parser-output">
+<h3>Dragons 0201 - 0300</h3>
+<table id="tpt-1" class="table-progress-tracking wikitable sortable mw-datatable">
+<tbody>
+<tr><th>#</th><th>Picture</th><th>Name</th><th>Element</th><th>Rarity</th></tr>
+<tr><td>0201</td><td></td><td><a href="/wiki/Mythical_Dragon" title="Mythical Dragon">Mythical Dragon</a></td><td><a href="/wiki/Category:Fire_Dragons" title="Category:Fire Dragons"></a></td><td><img alt="Mythical" title="Category:Mythical Dragons"></td></tr>
+<tr><td>0202</td><td></td><td><a href="/wiki/Heroic_Dragon" title="Heroic Dragon">Heroic Dragon</a></td><td><a href="/wiki/Category:Wind_Dragons" title="Category:Wind Dragons"></a></td><td><img alt="Heroic" title="Category:Heroic Dragons"></td></tr>
+</tbody>
+</table>
+</div>
+HTML;
+
+        $scraper = new DragonBookScraper();
+
+        $dragons = $scraper->parseDragonData($html);
+
+        $this->assertSame(['Fire'], $dragons[0]['element']);
+        $this->assertSame('Mythical', $dragons[0]['rarity']);
+        $this->assertSame(['Wind'], $dragons[1]['element']);
+        $this->assertSame('Heroic', $dragons[1]['rarity']);
+    }
 }

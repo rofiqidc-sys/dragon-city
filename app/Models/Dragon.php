@@ -23,12 +23,14 @@ class Dragon extends Model
         'summon_time',
         'orb_to_summon',
         'hatching_time',
+        'is_best_heroic',
     ];
 
     protected $casts = [
         'summon_time' => 'integer',
         'orb_to_summon' => 'integer',
         'hatching_time' => 'integer',
+        'is_best_heroic' => 'boolean',
     ];
 
     public function rarity(): BelongsTo

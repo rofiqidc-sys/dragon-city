@@ -246,7 +246,7 @@ class DragonBookScraper
                     continue;
                 }
 
-                if (!preg_match('/^(Common|Rare|Epic|Legendary|Mystic|Ancient|Very Rare|Breeding|Shop)$/i', $normalized)) {
+                if (!preg_match('/^(Common|Rare|Epic|Legendary|Mythical|Heroic|Mystic|Ancient|Very Rare|Breeding|Shop)$/i', $normalized)) {
                     $cellElements[] = $normalized;
                 }
             }
@@ -305,11 +305,11 @@ class DragonBookScraper
             $normalized = $this->normalizeName($candidate);
 
             if ($type === 'rarity') {
-                if (preg_match('/^(Common|Rare|Epic|Legendary|Mystic|Ancient|Very Rare)$/i', $normalized)) {
+                if (preg_match('/^(Common|Rare|Epic|Legendary|Mythical|Heroic|Mystic|Ancient|Very Rare)$/i', $normalized)) {
                     return $normalized;
                 }
 
-                if (preg_match('/^Category:/', $candidate) && preg_match('/(Common|Rare|Epic|Legendary|Mystic|Ancient|Very Rare)/i', $normalized)) {
+                if (preg_match('/^Category:/', $candidate) && preg_match('/(Common|Rare|Epic|Legendary|Mythical|Heroic|Mystic|Ancient|Very Rare)/i', $normalized)) {
                     return $normalized;
                 }
             }
