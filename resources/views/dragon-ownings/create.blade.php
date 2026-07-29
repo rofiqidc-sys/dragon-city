@@ -20,6 +20,21 @@
     </div>
 </div>
 
+@php
+    $availableDragons = $dragons->filter(function ($dragon) use ($account) {
+        return !$account->dragonOwningDetails->contains('dragon_id', $dragon->id);
+    })->values();
+
+    $dragonData = $availableDragons->map(function ($dragon) {
+        return [
+            'id' => $dragon->id,
+            'name' => $dragon->dragon_name,
+            'dragon_book' => $dragon->dragon_book,
+            'label' => $dragon->dragon_name . ' (' . ($dragon->rarity->name ?? '-') . ')',
+        ];
+    })->values()->all();
+@endphp
+
 <div class="row">
     <div class="col-md-8">
         <div class="card">
@@ -29,18 +44,12 @@
             <div class="card-body">
                 <form action="{{ route('dragon-owning-details.store', $account) }}" method="POST">
                     @csrf
-                    <div class="form-group">
-                        <label for="dragon_id">Select Dragon <span class="text-danger">*</span></label>
-                        <select name="dragon_id" id="dragon_id" class="form-control" required>
-                            <option value="">-- Choose a Dragon --</option>
-                            @foreach($dragons as $dragon)
-                                @if(!$account->dragonOwningDetails->contains('dragon_id', $dragon->id))
-                                    <option value="{{ $dragon->id }}">
-                                        {{ $dragon->dragon_name }} ({{ $dragon->rarity->name ?? '-' }})
-                                    </option>
-                                @endif
-                            @endforeach
-                        </select>
+                    <div class="form-group position-relative">
+                        <label for="dragon_name">Select Dragon <span class="text-danger">*</span></label>
+                        <input type="hidden" id="dragon_id" name="dragon_id" value="{{ old('dragon_id') }}">
+                        <input type="text" id="dragon_name" name="dragon_name" class="form-control" placeholder="Type at least 3 characters..." value="{{ old('dragon_name', optional($availableDragons->firstWhere('id', old('dragon_id')))->dragon_name) }}" autocomplete="off" required>
+                        <div id="dragon_suggestions" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1050; display: none; max-height: 220px; overflow-y: auto;"></div>
+                        <small class="form-text text-muted">Type 3 or more letters to see matching dragons.</small>
                         @error('dragon_id')
                             <span class="text-danger">{{ $message }}</span>
                         @enderror
@@ -69,4 +78,81 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const dragonNameInput = document.getElementById('dragon_name');
+        const dragonIdInput = document.getElementById('dragon_id');
+        const suggestions = document.getElementById('dragon_suggestions');
+        const form = dragonNameInput.closest('form');
+        const dragonData = @json($dragonData);
+
+        function clearSuggestions() {
+            suggestions.innerHTML = '';
+            suggestions.style.display = 'none';
+        }
+
+        function fillSuggestions(items) {
+            if (items.length === 0) {
+                suggestions.innerHTML = '<div class="list-group-item text-muted">No dragons found.</div>';
+            } else {
+                suggestions.innerHTML = items.map(item =>
+                    `<button type="button" class="list-group-item list-group-item-action text-left" data-id="${item.id}" data-name="${item.name}">${item.label}</button>`
+                ).join('');
+            }
+            suggestions.style.display = 'block';
+        }
+
+        function updateSuggestions() {
+            const query = dragonNameInput.value.trim().toLowerCase();
+            if (query.length < 3) {
+                dragonIdInput.value = '';
+                return clearSuggestions();
+            }
+
+            const matches = dragonData
+                .filter(item => {
+                    const haystack = `${item.name} ${item.label}`.toLowerCase();
+                    return haystack.includes(query);
+                })
+                .sort((a, b) => {
+                    const bookA = String(a.dragon_book ?? '').trim();
+                    const bookB = String(b.dragon_book ?? '').trim();
+
+                    const normalizedA = bookA ? bookA.replace(/^0+/, '') || '0' : '999999';
+                    const normalizedB = bookB ? bookB.replace(/^0+/, '') || '0' : '999999';
+
+                    return Number(normalizedA) - Number(normalizedB);
+                })
+                .slice(0, 10);
+
+            fillSuggestions(matches);
+        }
+
+        dragonNameInput.addEventListener('input', updateSuggestions);
+
+        suggestions.addEventListener('click', function (event) {
+            const button = event.target.closest('button[data-id]');
+            if (!button) return;
+            dragonNameInput.value = button.getAttribute('data-name');
+            dragonIdInput.value = button.getAttribute('data-id');
+            clearSuggestions();
+            dragonNameInput.focus();
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!event.target.closest('#dragon_name') && !event.target.closest('#dragon_suggestions')) {
+                clearSuggestions();
+            }
+        });
+
+        if (form) {
+            form.addEventListener('submit', function () {
+                const query = dragonNameInput.value.trim().toLowerCase();
+                const selected = dragonData.find(item => item.name.toLowerCase() === query);
+                dragonIdInput.value = selected ? selected.id : '';
+            });
+        }
+    });
+</script>
 @endsection

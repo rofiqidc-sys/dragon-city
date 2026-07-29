@@ -23,9 +23,15 @@
 <div class="row">
     <div class="col-sm-12">
         <div class="card">
-            <div class="card-header">
-                <h5>Element List</h5>
-                <a href="{{ route('elements.create') }}" class="btn btn-primary float-right">Add Element</a>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Element List</h5>
+                <div class="d-flex gap-2">
+                    <form action="{{ route('elements.update-seeder') }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-success" onclick="return confirm('Update ElementSeeder file based on current database data?')">Update Seeder</button>
+                    </form>
+                    <a href="{{ route('elements.create') }}" class="btn btn-primary">Add Element</a>
+                </div>
             </div>
             <div class="card-body">
                 @if(session('success'))

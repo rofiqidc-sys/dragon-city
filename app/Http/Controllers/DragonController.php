@@ -7,6 +7,8 @@ use App\Models\Element;
 use App\Models\Rarity;
 use App\Services\DragonBookScraper;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class DragonController extends Controller
@@ -37,11 +39,54 @@ class DragonController extends Controller
             ->when($request->filled('rarity'), function ($query) use ($request) {
                 $query->whereHas('rarity', fn ($rarityQuery) => $rarityQuery->where('id', $request->input('rarity')));
             })
-            ->orderBy('dragon_book', $direction)
+            ->orderByRaw("CASE WHEN dragon_book ~ '^[0-9]+$' THEN 1 ELSE 0 END DESC")
+            ->orderByRaw("LPAD(COALESCE(NULLIF(dragon_book, ''), '0'), 10, '0') " . $direction)
+            ->orderBy('dragon_name')
             ->paginate(12)
             ->withQueryString();
 
-        return view('dragons.index', compact('dragons', 'rarities'));
+        $bestHeroicDragons = Dragon::with('rarity')
+            ->where('is_best_heroic', true)
+            ->latest('updated_at')
+            ->get();
+
+        return view('dragons.index', compact('dragons', 'rarities', 'bestHeroicDragons'));
+    }
+
+    public function masterDragon(Request $request)
+    {
+        $accountId = 1;
+        $search = trim((string) $request->query('search', ''));
+        $selectedRarity = $request->query('rarity');
+        $rarities = Rarity::orderBy('name')->get();
+
+        $dragons = Dragon::with('rarity', 'element1', 'element2', 'element3', 'element4')
+            ->leftJoin('orb_ownings', function ($join) use ($accountId) {
+                $join->on('dragons.id', '=', 'orb_ownings.dragon_id')
+                    ->where('orb_ownings.account_id', '=', $accountId);
+            })
+            ->whereDoesntHave('dragonOwningDetails', function ($query) use ($accountId) {
+                $query->where('account_id', $accountId);
+            })
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $pattern = '%' . Str::lower($search) . '%';
+                    $query->whereRaw('LOWER(dragon_name) LIKE ?', [$pattern])
+                        ->orWhereRaw('LOWER(dragon_book) LIKE ?', [$pattern])
+                        ->orWhereHas('rarity', fn ($rarityQuery) => $rarityQuery->whereRaw('LOWER(name) LIKE ?', [$pattern]));
+                });
+            })
+            ->when($selectedRarity, function ($query) use ($selectedRarity) {
+                $query->where('rarity_id', $selectedRarity);
+            })
+            ->select('dragons.*', DB::raw('COALESCE(orb_ownings.jumlah_orb, 0) as jumlah_orb'))
+            ->orderByRaw("CASE WHEN dragon_book ~ '^[0-9]+$' THEN 1 ELSE 0 END DESC")
+            ->orderByRaw("LPAD(COALESCE(NULLIF(dragon_book, ''), '0'), 10, '0')")
+            ->orderBy('dragon_name')
+            ->paginate(16)
+            ->withQueryString();
+
+        return view('master-dragons.index', compact('dragons', 'rarities', 'search', 'selectedRarity'));
     }
 
     public function create()
@@ -147,6 +192,76 @@ class DragonController extends Controller
         return redirect()->route('dragons.index')->with('success', count($generated) . ' dragon alias berhasil dibuat.');
     }
 
+    public function exportSeederArray()
+    {
+        $dragons = Dragon::query()
+            ->select([
+                'dragon_book',
+                'alias',
+                'dragon_name',
+                'rarity_id',
+                'element_1_id',
+                'element_2_id',
+                'element_3_id',
+                'element_4_id',
+                'summon_time',
+                'orb_to_summon',
+                'hatching_time',
+                'is_best_heroic',
+            ])
+            ->get();
+
+        $payload = $dragons->map(function ($dragon) {
+            return [
+                'dragon_book' => $dragon->dragon_book,
+                'alias' => $dragon->alias,
+                'dragon_name' => $dragon->dragon_name,
+                'rarity_id' => $dragon->rarity_id,
+                'element_1_id' => $dragon->element_1_id,
+                'element_2_id' => $dragon->element_2_id,
+                'element_3_id' => $dragon->element_3_id,
+                'element_4_id' => $dragon->element_4_id,
+                'summon_time' => $dragon->summon_time,
+                'orb_to_summon' => $dragon->orb_to_summon,
+                'hatching_time' => $dragon->hatching_time,
+                'is_best_heroic' => (bool) $dragon->is_best_heroic,
+            ];
+        })->values()->all();
+
+        $seederPath = base_path('database/seeders/DragonSeeder.php');
+        $template = <<<'PHP'
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Dragon;
+use Illuminate\Database\Seeder;
+
+class DragonSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        $dragons = %s;
+
+        foreach ($dragons as $dragon) {
+            Dragon::updateOrCreate(
+                ['dragon_book' => $dragon['dragon_book']],
+                $dragon
+            );
+        }
+    }
+}
+PHP;
+
+        $content = sprintf($template, var_export($payload, true));
+        file_put_contents($seederPath, $content);
+
+        return redirect()->route('dragons.index')->with('success', 'DragonSeeder berhasil diperbarui.');
+    }
+
     private function resolveRarity(?string $name): ?Rarity
     {
         if ($name === null || trim($name) === '') {
@@ -231,11 +346,45 @@ class DragonController extends Controller
         return redirect()->route('dragons.index')->with('success', 'Dragon marked as Best Heroic.');
     }
 
-    public function truncate()
+    public function truncate(Request $request)
     {
+        $request->validate([
+            'confirmation' => ['required', 'in:TRUNCATE DRAGONS'],
+        ]);
+
+        $backupPath = $this->createDragonBackup();
         $this->resetDragonTable();
 
-        return redirect()->route('dragons.index')->with('success', 'Dragon data truncated successfully.');
+        return redirect()->route('dragons.index')->with('success', 'Dragon data truncated successfully. Backup created: ' . $backupPath);
+    }
+
+    public function restoreLatest(Request $request)
+    {
+        $request->validate([
+            'confirmation' => ['required', 'in:RESTORE DRAGONS'],
+        ]);
+
+        $backupPath = collect(Storage::disk('local')->files('dragon-backups'))
+            ->sortDesc()
+            ->first();
+
+        if ($backupPath === null) {
+            return redirect()->route('dragons.index')->with('error', 'No dragon backup is available.');
+        }
+
+        $backup = json_decode(Storage::disk('local')->get($backupPath), true, 512, JSON_THROW_ON_ERROR);
+
+        DB::transaction(function () use ($backup) {
+            $this->resetDragonTable();
+
+            foreach (['dragons', 'dragon_ownings', 'dragon_owning_details'] as $table) {
+                if (! empty($backup[$table])) {
+                    DB::table($table)->insert($backup[$table]);
+                }
+            }
+        });
+
+        return redirect()->route('dragons.index')->with('success', 'Latest dragon backup restored successfully.');
     }
 
     private function resetDragonTable(): void
@@ -243,5 +392,20 @@ class DragonController extends Controller
         $connection = Dragon::query()->getConnection();
 
         $connection->statement('TRUNCATE TABLE dragon_owning_details, dragon_ownings, dragons RESTART IDENTITY CASCADE');
+    }
+
+    private function createDragonBackup(): string
+    {
+        $backup = [
+            'created_at' => now()->toIso8601String(),
+            'dragons' => DB::table('dragons')->get()->map(fn ($row) => (array) $row)->all(),
+            'dragon_ownings' => DB::table('dragon_ownings')->get()->map(fn ($row) => (array) $row)->all(),
+            'dragon_owning_details' => DB::table('dragon_owning_details')->get()->map(fn ($row) => (array) $row)->all(),
+        ];
+
+        $path = 'dragon-backups/' . now()->format('Ymd_His_u') . '.json';
+        Storage::disk('local')->put($path, json_encode($backup, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+        return $path;
     }
 }

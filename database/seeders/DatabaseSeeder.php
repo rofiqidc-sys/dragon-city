@@ -13,6 +13,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call(AccountSeeder::class);
+        $this->call(ElementSeeder::class);
+        $this->call(RaritySeeder::class);
+        $this->call(BestHeroicSeeder::class);
+        $this->call(DragonSeeder::class);
+
         // User::factory(10)->create();
 
         User::factory()->create([

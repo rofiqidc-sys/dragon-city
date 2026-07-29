@@ -99,4 +99,65 @@ class DragonCrudTest extends TestCase
             'is_best_heroic' => true,
         ]);
     }
+
+    public function test_dragons_page_displays_current_best_heroic_dragons(): void
+    {
+        $dragon = Dragon::factory()->create([
+            'dragon_name' => 'History Dragon',
+            'is_best_heroic' => true,
+        ]);
+
+        $response = $this->get(route('dragons.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('History Best Heroic');
+        $response->assertSee('History Dragon');
+    }
+
+    public function test_dragons_page_sorts_by_dragon_book(): void
+    {
+        Dragon::factory()->create([
+            'dragon_book' => '0050',
+            'dragon_name' => 'Zeta Dragon',
+        ]);
+        Dragon::factory()->create([
+            'dragon_book' => '0001',
+            'dragon_name' => 'Alpha Dragon',
+        ]);
+
+        $response = $this->get(route('dragons.index', ['sort' => 'asc']));
+
+        $response->assertStatus(200);
+        $response->assertViewHas('dragons', function ($dragons) {
+            $ids = $dragons->pluck('id')->all();
+
+            return $ids[0] === Dragon::where('dragon_name', 'Alpha Dragon')->value('id')
+                && $ids[1] === Dragon::where('dragon_name', 'Zeta Dragon')->value('id');
+        });
+    }
+
+    public function test_update_dragon_seeder_action_writes_static_payload_to_seeder_file(): void
+    {
+        $dragon = Dragon::factory()->create([
+            'dragon_book' => '9999',
+            'dragon_name' => 'Seeder Update Dragon',
+            'alias' => 'SEED99',
+            'orb_to_summon' => 42,
+        ]);
+
+        $seederPath = base_path('database/seeders/DragonSeeder.php');
+        $originalContent = file_get_contents($seederPath);
+
+        try {
+            $response = $this->post(route('dragons.export-seeder-array'));
+
+            $response->assertRedirect(route('dragons.index'));
+
+            $updatedContent = file_get_contents($seederPath);
+            $this->assertStringContainsString("'dragon_book' => '9999'", $updatedContent);
+            $this->assertStringContainsString("'dragon_name' => 'Seeder Update Dragon'", $updatedContent);
+        } finally {
+            file_put_contents($seederPath, $originalContent);
+        }
+    }
 }

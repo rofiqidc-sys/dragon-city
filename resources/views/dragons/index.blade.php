@@ -28,6 +28,14 @@
     </div>
 @endif
 
+@if(session('error'))
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="alert alert-danger">{{ session('error') }}</div>
+        </div>
+    </div>
+@endif
+
 <div class="row mb-3">
     <div class="col-md-8">
         <div class="d-flex flex-wrap align-items-center">
@@ -41,8 +49,8 @@
                     </button>
                 </div>
                 <input type="hidden" id="sortInput" name="sort" value="{{ request('sort', 'asc') }}">
-                <button type="button" id="sortToggleBtn" class="btn btn-outline-secondary btn-sm ml-2" title="Toggle sort" onclick="toggleSort()" aria-label="Toggle sort">
-                    <i id="sortIcon" class="fas {{ request('sort', 'asc') == 'asc' ? 'fa-sort-alpha-down' : 'fa-sort-alpha-up' }}"></i>
+                <button type="button" id="sortToggleBtn" class="btn btn-outline-secondary btn-sm ml-2" title="Sort by dragon book" onclick="toggleSort()" aria-label="Sort by dragon book">
+                    <i id="sortIcon" class="fas {{ request('sort', 'asc') == 'asc' ? 'fa-sort-numeric-down' : 'fa-sort-numeric-up' }}"></i>
                 </button>
             </form>
             <form action="{{ route('dragons.index') }}" method="GET" class="d-flex align-items-center mr-2 mb-2">
@@ -64,23 +72,38 @@
             @endif
         </div>
     </div>
-    <div class="col-md-4 d-flex justify-content-md-end flex-wrap align-items-center">
-        <form action="{{ route('dragons.truncate') }}" method="POST" style="display:inline;" class="mr-2 mb-2">
-            @csrf
-            <button type="submit" class="btn btn-outline-danger" onclick="return confirm('This will clear all dragon data and reset the sequence. Continue?')">Truncate Data</button>
-        </form>
-        <button type="button" class="btn btn-outline-success mr-2 mb-2" data-toggle="modal" data-target="#generateModal">Generate</button>
-        <form action="{{ route('dragons.generate-aliases') }}" method="POST" style="display:inline;" class="mb-2">
-            @csrf
-            <button type="submit" class="btn btn-outline-success" onclick="return confirm('Generate ulang alias untuk semua naga?')">Generate Alias</button>
-        </form>
+    <div class="col-md-4">
+        <div class="d-flex flex-wrap justify-content-md-end align-items-center gap-2">
+            <form action="{{ route('dragons.truncate') }}" method="POST" class="mb-2" onsubmit="return confirmDragonReset(this)">
+                @csrf
+                <input type="hidden" name="confirmation" value="">
+                <button type="submit" class="btn btn-outline-danger btn-sm">Truncate Data</button>
+            </form>
+            <form action="{{ route('dragons.restore-latest') }}" method="POST" class="mb-2" onsubmit="return confirmDragonRestore(this)">
+                @csrf
+                <input type="hidden" name="confirmation" value="">
+                <button type="submit" class="btn btn-outline-warning btn-sm">Restore Latest Backup</button>
+            </form>
+            <button type="button" class="btn btn-outline-info btn-sm mb-2" data-toggle="modal" data-target="#bestHeroicHistoryModal">
+                History Best Heroic
+            </button>
+            <button type="button" class="btn btn-outline-success btn-sm mb-2" data-toggle="modal" data-target="#generateModal">Generate</button>
+            <form action="{{ route('dragons.generate-aliases') }}" method="POST" class="mb-2">
+                @csrf
+                <button type="submit" class="btn btn-outline-success btn-sm" onclick="return confirm('Generate ulang alias untuk semua naga?')">Generate Alias</button>
+            </form>
+            <form action="{{ route('dragons.export-seeder-array') }}" method="POST" class="mb-2">
+                @csrf
+                <button type="submit" class="btn btn-outline-info btn-sm">Update DragonSeeder</button>
+            </form>
+        </div>
     </div>
 </div>
 
 <div class="row">
     @forelse($dragons as $index => $dragon)
         <div class="col-lg-3 col-md-4 col-sm-6 col-12">
-            <div class="card prod-p-card shadow-sm border-0" style="background: linear-gradient(135deg, #f7fff9 0%, #e9f8ef 100%); color: #28543c;">
+            <div class="card prod-p-card shadow-sm border-0" style="background: {{ $dragon->is_best_heroic ? 'linear-gradient(135deg, #fff9db 0%, #f6e7a8 100%)' : 'linear-gradient(135deg, #f7fff9 0%, #e9f8ef 100%)' }}; color: #28543c;">
                 <div class="card-body">
                     <div class="row align-items-center m-b-25">
                         <div class="col">
@@ -208,9 +231,16 @@
             </div>
             <div class="modal-body">
                 <div class="form-group" id="generateFormGroup">
-                    <label for="batchNumber">Nomor batch</label>
-                    <input type="number" class="form-control" id="batchNumber" min="1" step="1" placeholder="1" required>
-                    <small class="form-text text-muted">Batch 1: 0001-0100, batch 2: 0101-0200, dan seterusnya.</small>
+                    <label>Pilih grup batch</label>
+                    <div class="d-flex flex-wrap" id="batchButtonGroup">
+                        @for ($i = 1; $i <= 23; $i += 5)
+                            @php
+                                $endBatch = min($i + 4, 23);
+                            @endphp
+                            <button type="button" class="btn btn-outline-success btn-sm m-1" data-batch="{{ $i }}" onclick="submitGenerate({{ $i }}, {{ $endBatch }})">{{ $i }}-{{ $endBatch }}</button>
+                        @endfor
+                    </div>
+                    <small class="form-text text-muted">Setiap tombol mewakili 5 batch sekaligus, misalnya 1-5 = 0001-0500.</small>
                 </div>
 
                 <div id="generateProgress" class="d-none">
@@ -228,49 +258,125 @@
     </div>
 </div>
 
-<script>
-function submitGenerate() {
-    const batchNumber = Number.parseInt(document.getElementById('batchNumber').value, 10);
+<div class="modal fade" id="bestHeroicHistoryModal" tabindex="-1" role="dialog" aria-labelledby="bestHeroicHistoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bestHeroicHistoryModalLabel">History Best Heroic</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Dragon</th>
+                                <th>Dragon Book</th>
+                                <th>Rarity</th>
+                                <th>Updated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($bestHeroicDragons as $bestHeroicDragon)
+                                <tr>
+                                    <td>{{ $bestHeroicDragon->dragon_name }}</td>
+                                    <td>{{ $bestHeroicDragon->dragon_book ?? '-' }}</td>
+                                    <td>{{ $bestHeroicDragon->rarity->name ?? '-' }}</td>
+                                    <td>{{ optional($bestHeroicDragon->updated_at)->format('Y-m-d H:i') ?? '-' }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">Belum ada dragon Best Heroic.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-    if (!Number.isInteger(batchNumber) || batchNumber < 1) {
-        alert('Silakan isi nomor batch dengan bilangan bulat minimal 1.');
+<script>
+function confirmDragonReset(form) {
+    const confirmation = window.prompt('Backup otomatis akan dibuat, tetapi semua data dragon akan dikosongkan. Ketik TRUNCATE DRAGONS untuk melanjutkan:');
+    if (confirmation !== 'TRUNCATE DRAGONS') return false;
+    form.querySelector('input[name="confirmation"]').value = confirmation;
+    return true;
+}
+
+function confirmDragonRestore(form) {
+    const confirmation = window.prompt('Data dragon saat ini akan diganti dengan backup terbaru. Ketik RESTORE DRAGONS untuk melanjutkan:');
+    if (confirmation !== 'RESTORE DRAGONS') return false;
+    form.querySelector('input[name="confirmation"]').value = confirmation;
+    return true;
+}
+
+function submitGenerate(startBatch = null, endBatch = null) {
+    const parsedStartBatch = Number.parseInt(startBatch ?? '', 10);
+    const parsedEndBatch = Number.parseInt(endBatch ?? '', 10);
+
+    if (!Number.isInteger(parsedStartBatch) || !Number.isInteger(parsedEndBatch) || parsedStartBatch < 1 || parsedEndBatch > 23 || parsedStartBatch > parsedEndBatch) {
+        alert('Silakan pilih grup batch yang valid.');
         return;
     }
 
-    const startCode = String((batchNumber - 1) * 100 + 1).padStart(4, '0');
-    const endCode = String(batchNumber * 100).padStart(4, '0');
-    const parameter = startCode + '-' + endCode;
-    const targetUrl = '/dragons/scrape?parameter=' + encodeURIComponent(parameter);
-
-    const batchInput = document.getElementById('batchNumber');
+    const batchButtons = document.querySelectorAll('#batchButtonGroup button[data-batch]');
     const submitBtn = document.getElementById('generateSubmitBtn');
     const closeBtn = document.getElementById('generateCloseBtn');
     const progressWrap = document.getElementById('generateProgress');
     const status = document.getElementById('generateStatus');
 
-    // Disable inputs and show progress
-    batchInput.disabled = true;
+    batchButtons.forEach((button) => {
+        button.disabled = true;
+    });
     submitBtn.disabled = true;
     closeBtn.disabled = true;
     progressWrap.classList.remove('d-none');
-    status.textContent = 'Starting...';
+    status.textContent = 'Starting batch ' + parsedStartBatch + '-' + parsedEndBatch + '...';
 
-    fetch(targetUrl, { headers: { 'Accept': 'application/json' } })
-        .then(response => {
-            if (!response.ok) throw new Error('HTTP ' + response.status);
-            return response.json();
-        })
-        .then(data => {
-            status.textContent = data.message ?? 'Done';
-        })
-        .catch(err => {
-            status.textContent = 'Error: ' + err.message;
-        })
-        .finally(() => {
+    const batches = [];
+    for (let batch = parsedStartBatch; batch <= parsedEndBatch; batch++) {
+        const startCode = String((batch - 1) * 100 + 1).padStart(4, '0');
+        const endCode = String(batch * 100).padStart(4, '0');
+        batches.push(startCode + '-' + endCode);
+    }
+
+    const runBatch = (index) => {
+        if (index >= batches.length) {
+            batchButtons.forEach((button) => {
+                button.disabled = false;
+            });
             submitBtn.disabled = false;
             closeBtn.disabled = false;
-            batchInput.disabled = false;
-        });
+            return;
+        }
+
+        const parameter = batches[index];
+        const targetUrl = '/dragons/scrape?parameter=' + encodeURIComponent(parameter);
+
+        status.textContent = 'Processing ' + parameter + '...';
+
+        fetch(targetUrl, { headers: { 'Accept': 'application/json' } })
+            .then(response => {
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return response.json();
+            })
+            .then(data => {
+                const message = data.message ?? 'Done';
+                status.textContent = message + ' (' + parameter + ')';
+            })
+            .catch(err => {
+                status.textContent = 'Error for ' + parameter + ': ' + err.message;
+            })
+            .finally(() => {
+                runBatch(index + 1);
+            });
+    };
+
+    runBatch(0);
 }
 
 function toggleSort() {

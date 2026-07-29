@@ -52,40 +52,17 @@
                     <div class="row align-items-center m-b-25">
                         <div class="col">
                             <h6 class="m-b-5 text-white">{{ $account->account_name }}</h6>
-                            <h3 class="m-b-0 text-white">{{ $account->dragonOwningDetails->count() }}</h3>
+                            <h3 class="m-b-0 text-white">
+                                <a href="{{ route('dragon-ownings.show', $account) }}" class="text-white text-decoration-none">
+                                    {{ $account->dragonOwningDetails->count() }}
+                                </a>
+                            </h3>
                             <small class="text-white">Dragons</small>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-crown text-c-yellow f-18"></i>
                         </div>
                     </div>
-                    
-                    @if($account->dragonOwningDetails->count() > 0)
-                        <div class="m-b-15">
-                            <small class="text-white">
-                                <strong>Owned Dragons:</strong>
-                                <div class="mt-2">
-                                    @foreach($account->dragonOwningDetails as $detail)
-                                        <div class="row m-b-5 align-items-center">
-                                            <div class="col-8">
-                                                <span class="badge badge-light">{{ $detail->dragon->dragon_name }}</span>
-                                            </div>
-                                            <div class="col-4 text-right">
-                                                <form action="{{ route('dragon-owning-details.destroy', [$account, $detail]) }}" method="POST" style="display:inline;">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-xs btn-danger" onclick="return confirm('Remove?')">×</button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </small>
-                        </div>
-                    @else
-                        <p class="m-b-15 text-white"><em>No dragons assigned yet.</em></p>
-                    @endif
-
                     <a href="{{ route('dragon-ownings.create', $account) }}" class="btn btn-sm btn-light btn-block">Add Dragon</a>
                 </div>
             </div>

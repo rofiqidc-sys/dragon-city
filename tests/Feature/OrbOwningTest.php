@@ -37,6 +37,58 @@ class OrbOwningTest extends TestCase
         ]);
     }
 
+    public function test_user_can_store_and_update_all_best_heroic_orbs_for_an_account(): void
+    {
+        $account = Account::factory()->create();
+        $bestHeroicOne = Dragon::factory()->create(['is_best_heroic' => true]);
+        $bestHeroicTwo = Dragon::factory()->create(['is_best_heroic' => true]);
+        $regularDragon = Dragon::factory()->create(['is_best_heroic' => false]);
+
+        $response = $this->post(route('orb-ownings.store-best-heroic'), [
+            'account_id' => $account->id,
+            'orbs' => [
+                $bestHeroicOne->id => 10,
+                $bestHeroicTwo->id => 20,
+            ],
+        ]);
+
+        $response->assertRedirect(route('home'));
+        $this->assertDatabaseHas('orb_ownings', [
+            'account_id' => $account->id,
+            'dragon_id' => $bestHeroicOne->id,
+            'jumlah_orb' => 10,
+        ]);
+        $this->assertDatabaseHas('orb_ownings', [
+            'account_id' => $account->id,
+            'dragon_id' => $bestHeroicTwo->id,
+            'jumlah_orb' => 20,
+        ]);
+        $this->assertDatabaseMissing('orb_ownings', [
+            'account_id' => $account->id,
+            'dragon_id' => $regularDragon->id,
+        ]);
+
+        $this->post(route('orb-ownings.store-best-heroic'), [
+            'account_id' => $account->id,
+            'orbs' => [
+                $bestHeroicOne->id => 30,
+                $bestHeroicTwo->id => 40,
+            ],
+        ]);
+
+        $this->assertDatabaseCount('orb_ownings', 2);
+        $this->assertDatabaseHas('orb_ownings', [
+            'account_id' => $account->id,
+            'dragon_id' => $bestHeroicOne->id,
+            'jumlah_orb' => 30,
+        ]);
+        $this->assertDatabaseHas('orb_ownings', [
+            'account_id' => $account->id,
+            'dragon_id' => $bestHeroicTwo->id,
+            'jumlah_orb' => 40,
+        ]);
+    }
+
     public function test_user_can_update_orb_owning_entry(): void
     {
         $account = Account::factory()->create();

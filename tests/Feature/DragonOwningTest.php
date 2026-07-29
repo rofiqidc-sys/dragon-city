@@ -54,6 +54,27 @@ class DragonOwningTest extends TestCase
         $response->assertSee($account->account_name);
     }
 
+    public function test_add_dragon_form_sorts_dragons_by_dragon_book(): void
+    {
+        $account = Account::factory()->create();
+
+        $dragonLater = Dragon::factory()->create([
+            'dragon_book' => '0050',
+        ]);
+        $dragonEarlier = Dragon::factory()->create([
+            'dragon_book' => '0001',
+        ]);
+
+        $response = $this->get(route('dragon-ownings.create', $account));
+
+        $response->assertStatus(200);
+        $response->assertViewHas('dragons', function ($dragons) use ($dragonEarlier, $dragonLater) {
+            $orderedIds = $dragons->pluck('id')->all();
+
+            return $orderedIds[0] === $dragonEarlier->id && $orderedIds[1] === $dragonLater->id;
+        });
+    }
+
     public function test_user_can_add_dragon_to_account(): void
     {
         $rarity = Rarity::factory()->create();

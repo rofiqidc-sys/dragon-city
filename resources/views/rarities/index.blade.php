@@ -23,9 +23,15 @@
 <div class="row">
     <div class="col-sm-12">
         <div class="card">
-            <div class="card-header">
-                <h5>Rarity List</h5>
-                <a href="{{ route('rarities.create') }}" class="btn btn-primary float-right">Add Rarity</a>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Rarity List</h5>
+                <div class="d-flex gap-2">
+                    <form action="{{ route('rarities.update-seeder') }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-success" onclick="return confirm('Update RaritySeeder file based on current database data?')">Update Seeder</button>
+                    </form>
+                    <a href="{{ route('rarities.create') }}" class="btn btn-primary">Add Rarity</a>
+                </div>
             </div>
             <div class="card-body">
                 @if(session('success'))

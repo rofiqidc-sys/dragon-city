@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\OrbOwning;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Account extends Model
@@ -26,5 +27,10 @@ class Account extends Model
     public function dragonOwningDetails(): HasMany
     {
         return $this->hasMany(DragonOwningDetail::class);
+    }
+
+    public function orbOwnings(): HasMany
+    {
+        return $this->hasMany(OrbOwning::class);
     }
 }
