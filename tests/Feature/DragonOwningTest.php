@@ -34,6 +34,21 @@ class DragonOwningTest extends TestCase
         $response->assertViewHas('dragons');
     }
 
+    public function test_add_dragon_form_contains_touch_number_pad(): void
+    {
+        $account = Account::factory()->create();
+        Dragon::factory()->create(['dragon_book' => '0001']);
+
+        $response = $this->get(route('dragon-ownings.create', $account));
+
+        $response->assertStatus(200);
+        $response->assertSee('Dragon Book Number Pad');
+        $response->assertSee('data-key="1"', false);
+        $response->assertSee('data-key="0"', false);
+        $response->assertSee('data-action="backspace"', false);
+        $response->assertSee('data-action="clear"', false);
+    }
+
     public function test_user_can_view_account_cards_with_dragons(): void
     {
         $rarity = Rarity::factory()->create();
@@ -52,6 +67,21 @@ class DragonOwningTest extends TestCase
         $response = $this->get('/dragon-ownings');
         $response->assertStatus(200);
         $response->assertSee($account->account_name);
+    }
+
+    public function test_account_dragon_show_page_contains_touch_number_pad(): void
+    {
+        $account = Account::factory()->create();
+        Dragon::factory()->create(['dragon_book' => '0001']);
+
+        $response = $this->get(route('dragon-ownings.show', $account));
+
+        $response->assertStatus(200);
+        $response->assertSee('Dragon Book Number Pad');
+        $response->assertSee('data-key="1"', false);
+        $response->assertSee('data-key="0"', false);
+        $response->assertSee('data-action="backspace"', false);
+        $response->assertSee('data-action="clear"', false);
     }
 
     public function test_add_dragon_form_sorts_dragons_by_dragon_book(): void

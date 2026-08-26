@@ -144,6 +144,12 @@
                     </div>
                     <div class="row align-items-center justify-content-center" style="gap: 10px;">
                         <div class="col-auto">
+                            <button type="button" class="d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: #e0f2f1; color: #00897b; border: none; border-radius: 50%; transition: all 0.2s ease-in-out; cursor: pointer;" title="Detail account" data-toggle="modal" data-target="#dragonDetailModal-{{ $dragon->id }}" onmouseover="this.style.background='#b2dfdb'; this.style.transform='scale(1.1)'" onmouseout="this.style.background='#e0f2f1'; this.style.transform='scale(1)'">
+                                <i class="fas fa-info" style="font-size: 16px;"></i>
+                                <span class="sr-only">Detail account</span>
+                            </button>
+                        </div>
+                        <div class="col-auto">
                             <a href="{{ route('dragons.edit', $dragon) }}" class="d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: #e3f2fd; color: #2e8b57; border: none; border-radius: 50%; transition: all 0.2s ease-in-out; display: flex; align-items: center; justify-content: center;" title="Edit" onmouseover="this.style.background='#bbdefb'; this.style.transform='scale(1.1)'" onmouseout="this.style.background='#e3f2fd'; this.style.transform='scale(1)'">
                                 <i class="fas fa-pencil-alt" style="font-size: 16px;"></i>
                             </a>
@@ -165,6 +171,38 @@
                                 </button>
                             </form>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="dragonDetailModal-{{ $dragon->id }}" tabindex="-1" role="dialog" aria-labelledby="dragonDetailModalLabel-{{ $dragon->id }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="dragonDetailModalLabel-{{ $dragon->id }}">{{ $dragon->dragon_name }} - Account Detail</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        @forelse($accounts as $account)
+                            @php
+                                $isOwned = $account->dragonOwningDetails->contains('dragon_id', $dragon->id);
+                                $orbCount = $account->orbOwnings->where('dragon_id', $dragon->id)->sum('jumlah_orb');
+                            @endphp
+                            <div class="d-flex align-items-center justify-content-between p-2 mb-2" style="background: {{ $isOwned ? '#e8f5e9' : '#ffebee' }}; color: {{ $isOwned ? '#2e7d32' : '#c62828' }}; border-radius: 4px;">
+                                <div>
+                                    <strong>{{ $account->account_name }}</strong>
+                                    <div><small>{{ $isOwned ? 'Dimiliki' : 'Belum dimiliki' }}</small></div>
+                                </div>
+                                <div class="text-right">
+                                    <strong>{{ $orbCount }}</strong>
+                                    <div><small>Orb</small></div>
+                                </div>
+                            </div>
+                        @empty
+                            <p class="text-muted text-center mb-0">Belum ada account.</p>
+                        @endforelse
                     </div>
                 </div>
             </div>

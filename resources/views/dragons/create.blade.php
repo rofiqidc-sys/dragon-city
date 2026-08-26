@@ -103,6 +103,25 @@
                         <input type="number" name="hatching_time" id="hatching_time" class="form-control" value="0" required>
                     </div>
 
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="is_collection" name="is_collection" value="1">
+                                <label class="custom-control-label" for="is_collection">
+                                    Is Collection
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="is_rescue" name="is_rescue" value="1">
+                                <label class="custom-control-label" for="is_rescue">
+                                    Is Rescue
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
                     <button type="submit" class="btn btn-primary">Save</button>
                     <a href="{{ route('dragons.index') }}" class="btn btn-secondary">Cancel</a>
                 </form>

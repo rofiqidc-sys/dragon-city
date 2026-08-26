@@ -2,8 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Account;
 use App\Models\Dragon;
+use App\Models\DragonOwningDetail;
 use App\Models\Element;
+use App\Models\OrbOwning;
 use App\Models\Rarity;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -134,6 +137,33 @@ class DragonCrudTest extends TestCase
             return $ids[0] === Dragon::where('dragon_name', 'Alpha Dragon')->value('id')
                 && $ids[1] === Dragon::where('dragon_name', 'Zeta Dragon')->value('id');
         });
+    }
+
+    public function test_dragons_page_shows_account_ownership_and_orb_details(): void
+    {
+        $dragon = Dragon::factory()->create(['dragon_name' => 'Account Detail Dragon']);
+        $owner = Account::factory()->create(['account_name' => 'Owner Account']);
+        $nonOwner = Account::factory()->create(['account_name' => 'Other Account']);
+
+        DragonOwningDetail::create([
+            'account_id' => $owner->id,
+            'dragon_id' => $dragon->id,
+        ]);
+        OrbOwning::create([
+            'account_id' => $owner->id,
+            'dragon_id' => $dragon->id,
+            'jumlah_orb' => 27,
+        ]);
+
+        $response = $this->get(route('dragons.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Detail account');
+        $response->assertSee('Owner Account');
+        $response->assertSee('Other Account');
+        $response->assertSee('Dimiliki');
+        $response->assertSee('Belum dimiliki');
+        $response->assertSee('27');
     }
 
     public function test_update_dragon_seeder_action_writes_static_payload_to_seeder_file(): void

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Dragon extends Model
 {
@@ -24,6 +25,9 @@ class Dragon extends Model
         'orb_to_summon',
         'hatching_time',
         'is_best_heroic',
+        'is_collection',
+        'is_rescue',
+        'collection_id',
     ];
 
     protected $casts = [
@@ -31,6 +35,8 @@ class Dragon extends Model
         'orb_to_summon' => 'integer',
         'hatching_time' => 'integer',
         'is_best_heroic' => 'boolean',
+        'is_collection' => 'boolean',
+        'is_rescue' => 'boolean',
     ];
 
     public function rarity(): BelongsTo
@@ -61,5 +67,10 @@ class Dragon extends Model
     public function dragonOwningDetails(): HasMany
     {
         return $this->hasMany(DragonOwningDetail::class);
+    }
+
+    public function collections(): BelongsToMany
+    {
+        return $this->belongsToMany(Collection::class, 'collection_dragon_members');
     }
 }

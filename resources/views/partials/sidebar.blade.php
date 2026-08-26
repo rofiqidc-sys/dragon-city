@@ -30,6 +30,9 @@
                 <li class="nav-item">
                     <a href="{{ route('dragons.index') }}" class="nav-link"><span class="pcoded-micon"><i class="feather icon-zap"></i></span><span class="pcoded-mtext">Dragon</span></a>
                 </li>
+                <li class="nav-item">
+                    <a href="{{ route('collections.index') }}" class="nav-link"><span class="pcoded-micon"><i class="feather icon-th"></i></span><span class="pcoded-mtext">Collection</span></a>
+                </li>
                 <li class="nav-item pcoded-menu-caption">
                     <label>Additional Data</label>
                 </li>
@@ -47,6 +50,18 @@
                 </li>
                 <li class="nav-item">
                     <a href="{{ route('orb-ownings.index') }}" class="nav-link"><span class="pcoded-micon"><i class="feather icon-bell"></i></span><span class="pcoded-mtext">Orb Owning</span></a>
+                </li>
+                <li class="nav-item pcoded-menu-caption">
+                    <label>Target Summon</label>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('target-dragons.index') }}" class="nav-link"><span class="pcoded-micon"><i class="feather icon-bell"></i></span><span class="pcoded-mtext">Target Dragon</span></a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link"><span class="pcoded-micon"><i class="feather icon-bell"></i></span><span class="pcoded-mtext">Target Orb</span></a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('trading-tasks.index') }}" class="nav-link"><span class="pcoded-micon"><i class="feather icon-bell"></i></span><span class="pcoded-mtext">Trading Task</span></a>
                 </li>
             </ul>
         </div>

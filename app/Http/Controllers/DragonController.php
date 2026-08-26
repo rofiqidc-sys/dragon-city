@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Dragon;
+use App\Models\Account;
 use App\Models\Element;
 use App\Models\Rarity;
 use App\Services\DragonBookScraper;
@@ -50,7 +51,11 @@ class DragonController extends Controller
             ->latest('updated_at')
             ->get();
 
-        return view('dragons.index', compact('dragons', 'rarities', 'bestHeroicDragons'));
+        $accounts = Account::with(['dragonOwningDetails', 'orbOwnings'])
+            ->orderBy('account_name')
+            ->get();
+
+        return view('dragons.index', compact('dragons', 'rarities', 'bestHeroicDragons', 'accounts'));
     }
 
     public function masterDragon(Request $request)
@@ -58,7 +63,22 @@ class DragonController extends Controller
         $accountId = 1;
         $search = trim((string) $request->query('search', ''));
         $selectedRarity = $request->query('rarity');
+        $selectedOrbRange = $request->query('orb_range');
         $rarities = Rarity::orderBy('name')->get();
+
+        // Define orb ranges
+        $orbRanges = [
+            '0-50' => [0, 50],
+            '51-100' => [51, 100],
+            '101-150' => [101, 150],
+            '151-200' => [151, 200],
+            '201-250' => [201, 250],
+            '251-300' => [251, 300],
+            '301-350' => [301, 350],
+            '351-400' => [351, 400],
+            '401-450' => [401, 450],
+            '451-500' => [451, 500],
+        ];
 
         $dragons = Dragon::with('rarity', 'element1', 'element2', 'element3', 'element4')
             ->leftJoin('orb_ownings', function ($join) use ($accountId) {
@@ -79,6 +99,10 @@ class DragonController extends Controller
             ->when($selectedRarity, function ($query) use ($selectedRarity) {
                 $query->where('rarity_id', $selectedRarity);
             })
+            ->when($selectedOrbRange && isset($orbRanges[$selectedOrbRange]), function ($query) use ($selectedOrbRange, $orbRanges) {
+                [$min, $max] = $orbRanges[$selectedOrbRange];
+                $query->whereBetween(DB::raw('COALESCE(orb_ownings.jumlah_orb, 0)'), [$min, $max]);
+            })
             ->select('dragons.*', DB::raw('COALESCE(orb_ownings.jumlah_orb, 0) as jumlah_orb'))
             ->orderByRaw("CASE WHEN dragon_book ~ '^[0-9]+$' THEN 1 ELSE 0 END DESC")
             ->orderByRaw("LPAD(COALESCE(NULLIF(dragon_book, ''), '0'), 10, '0')")
@@ -86,7 +110,58 @@ class DragonController extends Controller
             ->paginate(16)
             ->withQueryString();
 
-        return view('master-dragons.index', compact('dragons', 'rarities', 'search', 'selectedRarity'));
+        $accounts = Account::with(['dragonOwningDetails', 'orbOwnings'])
+            ->orderBy('account_name')
+            ->get();
+
+        return view('master-dragons.index', compact('dragons', 'rarities', 'search', 'selectedRarity', 'selectedOrbRange', 'orbRanges', 'accounts'));
+    }
+
+    public function targetDragon(Request $request)
+    {
+        $accountId = 1;
+        $search = trim((string) $request->query('search', ''));
+        $selectedRarity = $request->query('rarity');
+        $selectedAccount = (int) $request->query('account', 0);
+        $rarities = Rarity::orderBy('name')->get();
+        $accounts = \App\Models\Account::orderBy('account_name')->get();
+
+        $targetDragonIds = DB::table('dragons as d')
+            ->join('dragon_owning_details as dod', 'dod.dragon_id', '=', 'd.id')
+            ->where('dod.account_id', '!=', $accountId)
+            ->when($selectedAccount > 0, function ($query) use ($selectedAccount) {
+                $query->where('dod.account_id', $selectedAccount);
+            })
+            ->whereNotExists(function ($query) use ($accountId) {
+                $query->from('dragon_owning_details as dod_owner')
+                    ->whereColumn('dod_owner.dragon_id', 'd.id')
+                    ->where('dod_owner.account_id', $accountId);
+            })
+            ->select('d.dragon_name', DB::raw('MIN(d.id) as dragon_id'))
+            ->groupBy('d.dragon_name')
+            ->pluck('dragon_id')
+            ->all();
+
+        $dragons = Dragon::with('rarity', 'element1', 'element2', 'element3', 'element4')
+            ->whereIn('id', $targetDragonIds)
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $pattern = '%' . Str::lower($search) . '%';
+                    $query->whereRaw('LOWER(dragon_name) LIKE ?', [$pattern])
+                        ->orWhereRaw('LOWER(dragon_book) LIKE ?', [$pattern])
+                        ->orWhereHas('rarity', fn ($rarityQuery) => $rarityQuery->whereRaw('LOWER(name) LIKE ?', [$pattern]));
+                });
+            })
+            ->when($selectedRarity, function ($query) use ($selectedRarity) {
+                $query->where('rarity_id', $selectedRarity);
+            })
+            ->orderByRaw("CASE WHEN dragon_book ~ '^[0-9]+$' THEN 1 ELSE 0 END DESC")
+            ->orderByRaw("LPAD(COALESCE(NULLIF(dragon_book, ''), '0'), 10, '0')")
+            ->orderBy('dragon_name')
+            ->paginate(16)
+            ->withQueryString();
+
+        return view('target-dragons.index', compact('dragons', 'rarities', 'accounts', 'search', 'selectedRarity', 'selectedAccount'));
     }
 
     public function create()
@@ -407,5 +482,44 @@ PHP;
         Storage::disk('local')->put($path, json_encode($backup, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
 
         return $path;
+    }
+
+    public function search(Request $request)
+    {
+        $term = trim($request->query('term', ''));
+        $excludeCollection = $request->query('exclude_collection');
+
+        $query = Dragon::query()
+            ->when($excludeCollection, function ($query) use ($excludeCollection) {
+                $query->whereDoesntHave('collections', function ($subquery) use ($excludeCollection) {
+                    $subquery->where('collections.id', $excludeCollection);
+                });
+            })
+            ->when(!$excludeCollection, function ($query) {
+                $query->whereDoesntHave('collections');
+            })
+            ->when($term, function ($query) use ($term) {
+                $search = strtolower($term);
+                $query->where(function ($query) use ($search) {
+                    $query->whereRaw('LOWER(dragon_name) LIKE ?', ["%{$search}%"])
+                          ->orWhereRaw('LOWER(dragon_book) LIKE ?', ["%{$search}%"]);
+                });
+            })
+            ->orderByRaw("CASE WHEN dragon_book ~ '^[0-9]+' THEN 1 ELSE 0 END DESC")
+            ->orderByRaw("LPAD(COALESCE(NULLIF(dragon_book, ''), '0'), 10, '0')")
+            ->orderBy('dragon_name')
+            ->limit(30)
+            ->get();
+
+        $results = $query->map(function ($dragon) {
+            return [
+                'id' => $dragon->id,
+                'label' => trim($dragon->dragon_book . ' - ' . $dragon->dragon_name),
+                'book' => $dragon->dragon_book ?? '-',
+                'value' => trim($dragon->dragon_book . ' - ' . $dragon->dragon_name),
+            ];
+        });
+
+        return response()->json($results);
     }
 }

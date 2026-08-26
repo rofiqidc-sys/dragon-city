@@ -43,10 +43,31 @@
                 <form id="add-dragon-form" action="{{ route('dragon-owning-details.store', $account) }}" method="POST">
                     @csrf
                     <div class="row align-items-end">
-                        <div class="col-md-9">
+                        <div class="col-md-6">
                             <label for="dragon_search">Tambah Dragon</label>
                             <input id="dragon_search" type="text" class="form-control" placeholder="Cari dragon berdasarkan nama atau book..." autocomplete="off" {{ $dragons->isEmpty() ? 'disabled' : '' }}>
                             <input id="dragon_id" type="hidden" name="dragon_id" required>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mt-2" aria-label="Dragon number pad">
+                                <label>Dragon Book Number Pad</label>
+                                <div class="row no-gutters" style="max-width: 300px;">
+                                    @foreach([1, 2, 3, 4, 5, 6, 7, 8, 9] as $number)
+                                        <div class="col-4 p-1">
+                                            <button type="button" class="btn btn-outline-secondary btn-lg btn-block dragon-pad-key" data-key="{{ $number }}" aria-label="Enter {{ $number }}" {{ $dragons->isEmpty() ? 'disabled' : '' }}>{{ $number }}</button>
+                                        </div>
+                                    @endforeach
+                                    <div class="col-4 p-1">
+                                        <button type="button" class="btn btn-outline-danger btn-lg btn-block dragon-pad-key" data-action="clear" aria-label="Clear dragon input" {{ $dragons->isEmpty() ? 'disabled' : '' }}>C</button>
+                                    </div>
+                                    <div class="col-4 p-1">
+                                        <button type="button" class="btn btn-outline-secondary btn-lg btn-block dragon-pad-key" data-key="0" aria-label="Enter 0" {{ $dragons->isEmpty() ? 'disabled' : '' }}>0</button>
+                                    </div>
+                                    <div class="col-4 p-1">
+                                        <button type="button" class="btn btn-outline-warning btn-lg btn-block dragon-pad-key" data-action="backspace" aria-label="Delete last digit" {{ $dragons->isEmpty() ? 'disabled' : '' }}>Del</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-md-3">
                             <button id="submit-add-dragon" type="submit" class="btn btn-primary btn-block" {{ $dragons->isEmpty() ? 'disabled' : '' }}>Add Dragon</button>
@@ -152,6 +173,27 @@
                     $('#dragon_search').val(ui.item.value);
                     return false;
                 }
+            });
+
+            $('#dragon_search').on('input', function () {
+                $('#dragon_id').val('');
+            });
+
+            $('.dragon-pad-key').on('click', function () {
+                const input = $('#dragon_search');
+                const action = $(this).data('action');
+                let value = input.val();
+
+                if (action === 'clear') {
+                    value = '';
+                } else if (action === 'backspace') {
+                    value = value.slice(0, -1);
+                } else {
+                    value += String($(this).data('key'));
+                }
+
+                input.val(value).trigger('input').focus();
+                input.autocomplete('search', value);
             });
 
             $('#rarity_filter').on('change', function () {

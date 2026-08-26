@@ -104,6 +104,25 @@
                         <input type="number" name="hatching_time" id="hatching_time" class="form-control" value="{{ old('hatching_time', $dragon->hatching_time) }}" required>
                     </div>
 
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="is_collection" name="is_collection" value="1" @if(old('is_collection', $dragon->is_collection)) checked @endif>
+                                <label class="custom-control-label" for="is_collection">
+                                    Is Collection
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="is_rescue" name="is_rescue" value="1" @if(old('is_rescue', $dragon->is_rescue)) checked @endif>
+                                <label class="custom-control-label" for="is_rescue">
+                                    Is Rescue
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
                     <button type="submit" class="btn btn-primary">Update</button>
                     <a href="{{ route('dragons.index') }}" class="btn btn-secondary">Cancel</a>
                 </form>
