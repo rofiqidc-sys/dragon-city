@@ -38,11 +38,17 @@
 
 <div class="row mb-3">
     <div class="col-md-12">
-        <div class="d-flex flex-wrap align-items-center">
-            <a href="{{ route('collections.create') }}" class="btn btn-success mr-2 mb-2" style="background: #2e8b57; border-color: #2e8b57;">Add Collection</a>
-            <button type="button" class="btn btn-info mr-2 mb-2" data-toggle="modal" data-target="#dragonRewardsModal">
-                <i class="fas fa-search"></i> Check Dragon
-            </button>
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div class="d-flex flex-wrap align-items-center">
+                <a href="{{ route('collections.create') }}" class="btn btn-success mr-2 mb-2" style="background: #2e8b57; border-color: #2e8b57;">Add Collection</a>
+                <button type="button" class="btn btn-info mr-2 mb-2" data-toggle="modal" data-target="#dragonRewardsModal">
+                    <i class="fas fa-search"></i> Check Dragon
+                </button>
+            </div>
+            <form method="GET" action="{{ route('collections.index') }}" class="d-flex align-items-center mb-2" style="min-width: 320px;">
+                <input type="search" name="search" class="form-control" value="{{ $search ?? '' }}" placeholder="Cari dragon anggota collection (min. 3 huruf)" aria-label="Cari dragon anggota collection">
+                <button type="submit" class="btn btn-primary ml-2">Cari</button>
+            </form>
         </div>
     </div>
 </div>

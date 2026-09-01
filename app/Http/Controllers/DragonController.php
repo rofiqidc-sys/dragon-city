@@ -64,6 +64,8 @@ class DragonController extends Controller
         $search = trim((string) $request->query('search', ''));
         $selectedRarity = $request->query('rarity');
         $selectedOrbRange = $request->query('orb_range');
+        $selectedIsRescue = $request->query('is_rescue');
+        $selectedIsCollection = $request->query('is_collection');
         $rarities = Rarity::orderBy('name')->get();
 
         // Define orb ranges
@@ -103,6 +105,12 @@ class DragonController extends Controller
                 [$min, $max] = $orbRanges[$selectedOrbRange];
                 $query->whereBetween(DB::raw('COALESCE(orb_ownings.jumlah_orb, 0)'), [$min, $max]);
             })
+            ->when($selectedIsRescue !== null && $selectedIsRescue !== '', function ($query) use ($selectedIsRescue) {
+                $query->where('is_rescue', (bool) $selectedIsRescue);
+            })
+            ->when($selectedIsCollection !== null && $selectedIsCollection !== '', function ($query) use ($selectedIsCollection) {
+                $query->where('is_collection', (bool) $selectedIsCollection);
+            })
             ->select('dragons.*', DB::raw('COALESCE(orb_ownings.jumlah_orb, 0) as jumlah_orb'))
             ->orderByRaw("CASE WHEN dragon_book ~ '^[0-9]+$' THEN 1 ELSE 0 END DESC")
             ->orderByRaw("LPAD(COALESCE(NULLIF(dragon_book, ''), '0'), 10, '0')")
@@ -114,7 +122,7 @@ class DragonController extends Controller
             ->orderBy('account_name')
             ->get();
 
-        return view('master-dragons.index', compact('dragons', 'rarities', 'search', 'selectedRarity', 'selectedOrbRange', 'orbRanges', 'accounts'));
+        return view('master-dragons.index', compact('dragons', 'rarities', 'search', 'selectedRarity', 'selectedOrbRange', 'selectedIsRescue', 'selectedIsCollection', 'orbRanges', 'accounts'));
     }
 
     public function targetDragon(Request $request)

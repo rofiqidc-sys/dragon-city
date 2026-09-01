@@ -126,4 +126,53 @@ class TargetDragonTest extends TestCase
         $response->assertSee('Fire Dragon');
         $response->assertDontSee('Wind Dragon');
     }
+
+    public function test_master_dragon_page_can_filter_by_rescue_and_collection_flags(): void
+    {
+        $account = Account::factory()->create();
+        $account->forceFill(['id' => 1])->saveQuietly();
+
+        $rarity = Rarity::factory()->create();
+        $element = Element::factory()->create();
+
+        $rescueDragon = Dragon::factory()->create([
+            'dragon_name' => 'Rescue Dragon',
+            'rarity_id' => $rarity->id,
+            'element_1_id' => $element->id,
+            'is_rescue' => true,
+            'is_collection' => false,
+        ]);
+        $collectionDragon = Dragon::factory()->create([
+            'dragon_name' => 'Collection Dragon',
+            'rarity_id' => $rarity->id,
+            'element_1_id' => $element->id,
+            'is_rescue' => false,
+            'is_collection' => true,
+        ]);
+        $normalDragon = Dragon::factory()->create([
+            'dragon_name' => 'Normal Dragon',
+            'rarity_id' => $rarity->id,
+            'element_1_id' => $element->id,
+            'is_rescue' => false,
+            'is_collection' => false,
+        ]);
+
+        $response = $this->get(route('master-dragons.index', [
+            'is_rescue' => '1',
+            'is_collection' => '0',
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertViewHas('dragons', function ($dragons) use ($rescueDragon, $collectionDragon, $normalDragon) {
+            $ids = $dragons->pluck('id')->all();
+
+            return count($ids) === 1
+                && in_array($rescueDragon->id, $ids, true)
+                && ! in_array($collectionDragon->id, $ids, true)
+                && ! in_array($normalDragon->id, $ids, true);
+        });
+        $response->assertSee('Rescue Dragon');
+        $response->assertDontSee('Collection Dragon');
+        $response->assertDontSee('Normal Dragon');
+    }
 }

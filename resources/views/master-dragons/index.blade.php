@@ -29,7 +29,7 @@
             <div class="card-body" style="background: #ffffff; color: #1f2d20;">
                 <p class="card-text text-dark">Halaman ini menampilkan semua dragon yang belum dimiliki oleh account target. Warna dominan putih membuat daftar lebih bersih, sementara hijau digunakan sebagai aksen utama.</p>
                 <form method="GET" action="{{ route('master-dragons.index') }}" class="row gx-2 align-items-end mb-4">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label for="rarity" class="form-label">Filter Rarity</label>
                         <select id="rarity" name="rarity" class="form-control" onchange="this.form.submit()">
                             <option value="">-- Semua Rarity --</option>
@@ -38,7 +38,7 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label for="orb_range" class="form-label">Filter Owned Orb</label>
                         <select id="orb_range" name="orb_range" class="form-control" onchange="this.form.submit()">
                             <option value="">-- Semua Range --</option>
@@ -47,7 +47,23 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <label for="is_rescue" class="form-label">Filter Is Rescue</label>
+                        <select id="is_rescue" name="is_rescue" class="form-control" onchange="this.form.submit()">
+                            <option value="">-- Semua --</option>
+                            <option value="1" {{ (string) $selectedIsRescue === '1' ? 'selected' : '' }}>Rescue</option>
+                            <option value="0" {{ (string) $selectedIsRescue === '0' ? 'selected' : '' }}>Bukan Rescue</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="is_collection" class="form-label">Filter Is Collection</label>
+                        <select id="is_collection" name="is_collection" class="form-control" onchange="this.form.submit()">
+                            <option value="">-- Semua --</option>
+                            <option value="1" {{ (string) $selectedIsCollection === '1' ? 'selected' : '' }}>Collection</option>
+                            <option value="0" {{ (string) $selectedIsCollection === '0' ? 'selected' : '' }}>Bukan Collection</option>
+                        </select>
+                    </div>
+                    <div class="col-md-12 mt-3">
                         <label for="search" class="form-label">Cari Dragon</label>
                         <div class="input-group">
                             <input id="search" name="search" type="search" class="form-control" placeholder="Cari nama, book, atau rarity..." value="{{ $search ?? '' }}">

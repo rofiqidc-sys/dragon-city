@@ -10,11 +10,23 @@ use Illuminate\Support\Facades\DB;
 
 class CollectionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // $collections = Collection::with('dragons')->orderBy('collection_name')->get();
-        $collections = Collection::with('dragons')->orderBy('id')->get();
-        return view('collections.index', compact('collections'));
+        $search = trim((string) $request->query('search', ''));
+
+        $collections = Collection::with('dragons')
+            ->when(mb_strlen($search) >= 3, function ($query) use ($search) {
+                $pattern = '%' . Str::lower($search) . '%';
+
+                $query->whereHas('dragons', function ($dragonQuery) use ($pattern) {
+                    $dragonQuery->whereRaw('LOWER(dragon_name) LIKE ?', [$pattern])
+                        ->orWhereRaw('LOWER(dragon_book) LIKE ?', [$pattern]);
+                });
+            })
+            ->orderBy('id')
+            ->get();
+
+        return view('collections.index', compact('collections', 'search'));
     }
 
     public function create()
