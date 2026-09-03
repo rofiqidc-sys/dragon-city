@@ -41,6 +41,10 @@
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
             <div class="d-flex flex-wrap align-items-center">
                 <a href="{{ route('collections.create') }}" class="btn btn-success mr-2 mb-2" style="background: #2e8b57; border-color: #2e8b57;">Add Collection</a>
+                <form action="{{ route('collections.calculate-achievement') }}" method="POST" class="mr-2 mb-2">
+                    @csrf
+                    <button type="submit" class="btn btn-warning">Hitung Persentase</button>
+                </form>
                 <button type="button" class="btn btn-info mr-2 mb-2" data-toggle="modal" data-target="#dragonRewardsModal">
                     <i class="fas fa-search"></i> Check Dragon
                 </button>
@@ -56,15 +60,18 @@
 <div class="row">
     @forelse($collections as $collection)
         <div class="col-xl-3 col-md-6">
-            <div class="card prod-p-card bg-c-blue" style="cursor: pointer;" onclick="window.location.href='{{ route('collections.show', $collection) }}'">
+            <div class="card prod-p-card" style="cursor: pointer; background-color: {{ (float) $collection->achievement >= 100 ? '#06D6A0' : ((float) $collection->achievement > 75 ? '#118AB2' : ((float) $collection->achievement > 50 ? '#FFD166' : ((float) $collection->achievement > 0 ? '#FF7F50' : '#8B1E2D'))) }};" onclick="window.location.href='{{ route('collections.show', $collection) }}'">
                 <div class="card-body">
                     <div class="row align-items-center m-b-25">
                         <div class="col">
-                            <h6 class="m-b-5 text-white">{{ $collection->collection_name }}</h6>
-                            <h3 class="m-b-0 text-white">
+                            <h6 class="m-b-5 {{ (float) $collection->achievement > 50 && (float) $collection->achievement <= 75 ? 'text-dark' : 'text-white' }}">{{ $collection->collection_name }}</h6>
+                            <h3 class="m-b-0 {{ (float) $collection->achievement > 50 && (float) $collection->achievement <= 75 ? 'text-dark' : 'text-white' }}">
                                 {{ $collection->total_member }}
                             </h3>
-                            <small class="text-white">Dragons</small>
+                            <small class="{{ (float) $collection->achievement > 50 && (float) $collection->achievement <= 75 ? 'text-dark' : 'text-white' }}">Dragons</small>
+                            <div class="mt-2">
+                                <small class="{{ (float) $collection->achievement > 50 && (float) $collection->achievement <= 75 ? 'text-dark' : 'text-white' }}">Achievement: {{ number_format((float) $collection->achievement, 2) }}%</small>
+                            </div>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-th text-c-blue f-18"></i>
@@ -72,12 +79,12 @@
                     </div>
                     <div class="row m-b-15">
                         <div class="col-12">
-                            <small class="text-white">
+                            <small class="{{ (float) $collection->achievement > 50 && (float) $collection->achievement <= 75 ? 'text-dark' : 'text-white' }}">
                                 {{ $collection->gem_reward }} Gems
                             </small>
                             @if($collection->dragonReward)
                                 <div class="mt-2">
-                                    <small class="text-white">
+                                    <small class="{{ (float) $collection->achievement > 50 && (float) $collection->achievement <= 75 ? 'text-dark' : 'text-white' }}">
                                         {{ $collection->dragonReward->dragon_name }}
                                     </small>
                                 </div>

@@ -29,6 +29,29 @@ class CollectionController extends Controller
         return view('collections.index', compact('collections', 'search'));
     }
 
+    public function calculateAchievement()
+    {
+        $ownedDragonIds = DB::table('dragon_owning_details')
+            ->where('account_id', 1)
+            ->pluck('dragon_id');
+
+        DB::transaction(function () use ($ownedDragonIds) {
+            Collection::with('dragons:id')
+                ->get()
+                ->each(function (Collection $collection) use ($ownedDragonIds) {
+                    $totalDragons = $collection->dragons->count();
+                    $ownedDragons = $collection->dragons->whereIn('id', $ownedDragonIds)->count();
+                    $achievement = $totalDragons === 0 ? 0 : ($ownedDragons / $totalDragons) * 100;
+
+                    $collection->update(['achievement' => $achievement]);
+                });
+        });
+
+        return redirect()
+            ->route('collections.index')
+            ->with('success', 'Achievement berhasil dihitung dari account ID 1.');
+    }
+
     public function create()
     {
         $dragons = Dragon::with('rarity', 'element1', 'element2', 'element3', 'element4')

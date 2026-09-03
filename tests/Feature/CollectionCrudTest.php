@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Collection;
 use App\Models\Dragon;
+use App\Models\DragonOwningDetail;
+use App\Models\Account;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -81,6 +83,25 @@ class CollectionCrudTest extends TestCase
         $shortResponse->assertOk();
         $shortResponse->assertSee('Forest Collection');
         $shortResponse->assertSee('Sky Collection');
+    }
+
+    public function test_achievement_is_calculated_from_account_one_ownership(): void
+    {
+        Account::factory()->create(['id' => 1]);
+        $collection = Collection::create(['collection_name' => 'Forest Collection', 'gem_reward' => 10]);
+        $ownedDragon = Dragon::factory()->create();
+        $unownedDragon = Dragon::factory()->create();
+
+        $collection->dragons()->attach([$ownedDragon->id, $unownedDragon->id]);
+        DragonOwningDetail::create(['account_id' => 1, 'dragon_id' => $ownedDragon->id]);
+
+        $response = $this->post(route('collections.calculate-achievement'));
+
+        $response->assertRedirect(route('collections.index'));
+        $this->assertDatabaseHas('collections', [
+            'id' => $collection->id,
+            'achievement' => '50.00',
+        ]);
     }
 
     public function test_collection_show_page_has_number_pad_for_adding_member(): void

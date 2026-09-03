@@ -15,6 +15,11 @@ class Collection extends Model
         'collection_name',
         'gem_reward',
         'dragon_reward_id',
+        'achievement',
+    ];
+
+    protected $casts = [
+        'achievement' => 'decimal:2',
     ];
 
     protected $appends = ['total_member'];

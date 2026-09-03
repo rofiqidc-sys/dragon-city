@@ -50,6 +50,7 @@ Route::delete('/orb-ownings/{orbOwning}', [App\Http\Controllers\OrbOwningControl
 Route::post('/orb-ownings/upsert', [App\Http\Controllers\OrbOwningController::class, 'upsert'])->name('orb-ownings.upsert');
 
 Route::get('/collections', [CollectionController::class, 'index'])->name('collections.index');
+Route::post('/collections/calculate-achievement', [CollectionController::class, 'calculateAchievement'])->name('collections.calculate-achievement');
 Route::get('/collections/dragon-rewards', [CollectionController::class, 'dragonRewards'])->name('collections.dragon-rewards');
 Route::get('/collections/create', [CollectionController::class, 'create'])->name('collections.create');
 Route::post('/collections', [CollectionController::class, 'store'])->name('collections.store');
