@@ -115,10 +115,16 @@
                                         </button>
                                     </div>
                                     <div class="modal-body">
+                                        @php $totalTradeableOrbCount = 0; @endphp
                                         @forelse($accounts as $account)
                                             @php
                                                 $isOwned = $account->dragonOwningDetails->contains('dragon_id', $dragon->id);
                                                 $orbCount = $account->orbOwnings->where('dragon_id', $dragon->id)->sum('jumlah_orb');
+                                                $orbPerTrade = (int) ($dragon->rarity->orb_per_trade ?? 0);
+                                                $tradeableOrbCount = $orbPerTrade > 0
+                                                    ? intdiv((int) $orbCount, $orbPerTrade) * $orbPerTrade
+                                                    : 0;
+                                                $totalTradeableOrbCount += $tradeableOrbCount;
                                             @endphp
                                             <div class="d-flex align-items-center justify-content-between p-2 mb-2" style="background: {{ $isOwned ? '#e8f5e9' : '#ffebee' }}; color: {{ $isOwned ? '#2e7d32' : '#c62828' }}; border-radius: 4px;">
                                                 <div>
@@ -128,11 +134,15 @@
                                                 <div class="text-right">
                                                     <strong>{{ $orbCount }}</strong>
                                                     <div><small>Orb</small></div>
+                                                    <div><small>Siap di-trading: {{ $tradeableOrbCount }} orb</small></div>
                                                 </div>
                                             </div>
                                         @empty
                                             <p class="text-muted text-center mb-0">Belum ada account.</p>
                                         @endforelse
+                                        <div class="border-top pt-3 mt-3 text-right">
+                                            <strong>Total orb siap di-trading: {{ $totalTradeableOrbCount }} orb</strong>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

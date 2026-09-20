@@ -6,6 +6,7 @@ use App\Models\Collection;
 use App\Models\Dragon;
 use App\Models\DragonOwningDetail;
 use App\Models\Account;
+use App\Models\OrbOwning;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -115,5 +116,111 @@ class CollectionCrudTest extends TestCase
         $response->assertSee('data-key="1"');
         $response->assertSee('data-action="clear"');
         $response->assertSee('data-action="backspace"');
+    }
+
+    public function test_unowned_collection_members_page_filters_by_is_rescue_status(): void
+    {
+        Account::factory()->create(['id' => 1]);
+        $collection = Collection::create(['collection_name' => 'Rescue Collection', 'gem_reward' => 10]);
+        $rarity = \App\Models\Rarity::factory()->create(['name' => 'Rare']);
+
+        $rescueDragon = Dragon::factory()->create([
+            'dragon_name' => 'Rescue Dragon',
+            'rarity_id' => $rarity->id,
+            'is_rescue' => true,
+        ]);
+        $normalDragon = Dragon::factory()->create([
+            'dragon_name' => 'Normal Dragon',
+            'rarity_id' => $rarity->id,
+            'is_rescue' => false,
+        ]);
+
+        $collection->dragons()->attach([$rescueDragon->id, $normalDragon->id]);
+
+        $response = $this->get(route('collections.unowned-members', ['is_rescue' => '1']));
+
+        $response->assertOk();
+        $response->assertSee('Rescue Dragon');
+        $response->assertDontSee('Normal Dragon');
+    }
+
+    public function test_unowned_collection_members_page_filters_by_rarity_and_account_one_ownership(): void
+    {
+        Account::factory()->create(['id' => 1]);
+        Account::factory()->create(['id' => 2, 'account_name' => 'Account Two']);
+        $rarity = \App\Models\Rarity::factory()->create(['name' => 'Rare']);
+        $otherRarity = \App\Models\Rarity::factory()->create(['name' => 'Epic']);
+        $collection = Collection::create(['collection_name' => 'Forest Collection', 'gem_reward' => 10]);
+
+        $eligibleDragon = Dragon::factory()->create([
+            'dragon_name' => 'Aqua Dragon',
+            'rarity_id' => $rarity->id,
+        ]);
+        $ownedDragon = Dragon::factory()->create([
+            'dragon_name' => 'Fire Dragon',
+            'rarity_id' => $rarity->id,
+        ]);
+        $otherRarityDragon = Dragon::factory()->create([
+            'dragon_name' => 'Stone Dragon',
+            'rarity_id' => $otherRarity->id,
+        ]);
+        $notMemberDragon = Dragon::factory()->create([
+            'dragon_name' => 'Wind Dragon',
+            'rarity_id' => $rarity->id,
+        ]);
+
+        $collection->dragons()->attach([$eligibleDragon->id, $ownedDragon->id, $otherRarityDragon->id]);
+        OrbOwning::create([
+            'account_id' => 1,
+            'dragon_id' => $eligibleDragon->id,
+            'jumlah_orb' => 18,
+        ]);
+        OrbOwning::create([
+            'account_id' => 2,
+            'dragon_id' => $eligibleDragon->id,
+            'jumlah_orb' => 27,
+        ]);
+        DragonOwningDetail::create([
+            'account_id' => 2,
+            'dragon_id' => $eligibleDragon->id,
+        ]);
+        DragonOwningDetail::create(['account_id' => 1, 'dragon_id' => $ownedDragon->id]);
+
+        $response = $this->get(route('collections.unowned-members', [
+            'rarity' => $rarity->id,
+            'account_id' => 2,
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('Aqua Dragon');
+        $response->assertSee('18');
+        $response->assertSee('27');
+        $response->assertSee('account-comparison-owned');
+        $response->assertDontSee('Fire Dragon');
+        $response->assertDontSee('Stone Dragon');
+        $response->assertDontSee('Wind Dragon');
+    }
+
+    public function test_dragon_rewards_includes_account_one_orb_count(): void
+    {
+        $account = Account::factory()->create(['id' => 1]);
+        $dragon = Dragon::factory()->create(['dragon_name' => 'Orb Dragon']);
+        $collection = Collection::create([
+            'collection_name' => 'Orb Collection',
+            'gem_reward' => 10,
+            'dragon_reward_id' => $dragon->id,
+        ]);
+        $collection->dragons()->attach($dragon);
+        OrbOwning::create([
+            'account_id' => $account->id,
+            'dragon_id' => $dragon->id,
+            'jumlah_orb' => 42,
+        ]);
+
+        $response = $this->getJson(route('collections.dragon-rewards'));
+
+        $response->assertOk()
+            ->assertJsonPath('data.0.dragon_name', 'Orb Dragon')
+            ->assertJsonPath('data.0.jumlah_orb', 42);
     }
 }

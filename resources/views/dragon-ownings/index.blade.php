@@ -63,7 +63,10 @@
                             <i class="fas fa-crown text-c-yellow f-18"></i>
                         </div>
                     </div>
-                    <a href="{{ route('dragon-ownings.create', $account) }}" class="btn btn-sm btn-light btn-block">Add Dragon</a>
+                    <div class="d-flex">
+                        <a href="{{ route('dragon-ownings.create', $account) }}" class="btn btn-sm btn-light flex-fill mr-1">Add Dragon</a>
+                        <a href="{{ route('dragon-ownings.quick-create', $account) }}" class="btn btn-sm btn-success flex-fill ml-1">Tambah Cepat</a>
+                    </div>
                 </div>
             </div>
         </div>

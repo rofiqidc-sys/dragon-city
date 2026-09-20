@@ -103,6 +103,10 @@
     <div class="col-sm-12">
         <div class="card">
             <div class="card-body">
+                <div class="mb-3" aria-label="Dragon ownership legend">
+                    <span class="badge" style="background-color: #06D6A0; color: #111;">Owned by Account 1</span>
+                    <span class="badge" style="background-color: #FFD166; color: #111;">Not owned by Account 1</span>
+                </div>
                 <div class="table-responsive">
                     <table id="collection-dragons-table" class="table table-hover table-bordered" style="width:100%">
                         <thead>
@@ -168,6 +172,12 @@
                         }
                     }
                 ],
+                createdRow: function(row, data) {
+                    $(row).css({
+                        'background-color': data.is_owned ? '#06D6A0' : '#FFD166',
+                        'color': '#111'
+                    });
+                },
                 responsive: true,
                 autoWidth: false,
             });

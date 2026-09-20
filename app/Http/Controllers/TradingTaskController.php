@@ -93,6 +93,28 @@ class TradingTaskController extends Controller
         return redirect()->route('trading-tasks.index')->with('success', 'Trading task deleted successfully.');
     }
 
+    public function addOrbToTrader(TradingTask $tradingTask)
+    {
+        DB::transaction(function () use ($tradingTask) {
+            $orbOwning = OrbOwning::where('account_id', $tradingTask->trader_id)
+                ->where('dragon_id', $tradingTask->dragon_id)
+                ->lockForUpdate()
+                ->first();
+
+            if ($orbOwning) {
+                $orbOwning->increment('jumlah_orb');
+            } else {
+                OrbOwning::create([
+                    'account_id' => $tradingTask->trader_id,
+                    'dragon_id' => $tradingTask->dragon_id,
+                    'jumlah_orb' => 1,
+                ]);
+            }
+        });
+
+        return redirect()->route('trading-tasks.index')->with('success', '1 orb ditambahkan ke trader.');
+    }
+
     private function validateTask(Request $request): array
     {
         $validated = $request->validate([

@@ -105,6 +105,71 @@ class DragonOwningTest extends TestCase
         });
     }
 
+    public function test_user_can_view_quick_add_form_with_unowned_dragons(): void
+    {
+        $account = Account::factory()->create();
+        $availableDragon = Dragon::factory()->create(['dragon_name' => 'Available Dragon']);
+        $ownedDragon = Dragon::factory()->create(['dragon_name' => 'Owned Dragon']);
+
+        DragonOwningDetail::create([
+            'account_id' => $account->id,
+            'dragon_id' => $ownedDragon->id,
+        ]);
+
+        $response = $this->get(route('dragon-ownings.quick-create', $account));
+
+        $response->assertOk();
+        $response->assertSee('Available Dragon');
+        $response->assertDontSee('Owned Dragon');
+        $response->assertSee('name="dragon_ids[]"', false);
+    }
+
+    public function test_user_can_quick_add_multiple_dragons_to_account(): void
+    {
+        $account = Account::factory()->create();
+        $firstDragon = Dragon::factory()->create();
+        $secondDragon = Dragon::factory()->create();
+
+        $response = $this->post(route('dragon-ownings.quick-store', $account), [
+            'dragon_ids' => [$firstDragon->id, $secondDragon->id],
+        ]);
+
+        $response->assertRedirect(route('dragon-ownings.quick-create', $account));
+        $this->assertDatabaseHas('dragon_owning_details', [
+            'account_id' => $account->id,
+            'dragon_id' => $firstDragon->id,
+        ]);
+        $this->assertDatabaseHas('dragon_owning_details', [
+            'account_id' => $account->id,
+            'dragon_id' => $secondDragon->id,
+        ]);
+    }
+
+    public function test_quick_add_filters_by_rarity_and_paginates_by_fifteen(): void
+    {
+        $account = Account::factory()->create();
+        $rarity = Rarity::factory()->create(['name' => 'Quick Rare']);
+        $otherRarity = Rarity::factory()->create(['name' => 'Other Rarity']);
+
+        Dragon::factory()->count(16)->create(['rarity_id' => $rarity->id]);
+        $otherDragon = Dragon::factory()->create([
+            'rarity_id' => $otherRarity->id,
+            'dragon_name' => 'Other Rarity Dragon',
+        ]);
+
+        $response = $this->get(route('dragon-ownings.quick-create', [
+            'account' => $account,
+            'rarity' => $rarity->id,
+        ]));
+
+        $response->assertOk();
+        $response->assertViewHas('dragons', function ($dragons) use ($otherDragon) {
+            return $dragons->total() === 16
+                && $dragons->perPage() === 15
+                && !$dragons->getCollection()->contains('id', $otherDragon->id);
+        });
+    }
+
     public function test_user_can_add_dragon_to_account(): void
     {
         $rarity = Rarity::factory()->create();
@@ -119,7 +184,7 @@ class DragonOwningTest extends TestCase
             'dragon_id' => $dragon->id,
         ]);
 
-        $response->assertRedirect(route('dragon-ownings.index'));
+        $response->assertRedirect(route('dragon-ownings.show', $account));
         $this->assertDatabaseHas('dragon_owning_details', [
             'account_id' => $account->id,
             'dragon_id' => $dragon->id,
@@ -145,8 +210,8 @@ class DragonOwningTest extends TestCase
             'dragon_id' => $dragon->id,
         ]);
 
-        $response->assertRedirect(route('dragon-ownings.index'));
-        $response->assertSessionHas('warning', 'Dragon already assigned to this account.');
+        $response->assertRedirect(route('dragon-ownings.show', $account));
+        $response->assertSessionHas('warning', "Dragon '{$dragon->dragon_name}' is already assigned to this account.");
     }
 
     public function test_user_can_remove_dragon_from_account(): void

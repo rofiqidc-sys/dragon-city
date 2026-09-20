@@ -76,6 +76,25 @@ class TradingTaskTest extends TestCase
         $this->assertDatabaseMissing('orb_ownings', ['account_id' => $reciever->id, 'dragon_id' => $dragon->id]);
     }
 
+    public function test_user_can_add_one_orb_to_the_trader_from_the_index_action(): void
+    {
+        $task = TradingTask::factory()->create();
+        OrbOwning::create([
+            'account_id' => $task->trader_id,
+            'dragon_id' => $task->dragon_id,
+            'jumlah_orb' => 4,
+        ]);
+
+        $response = $this->post(route('trading-tasks.add-orb', $task));
+
+        $response->assertRedirect(route('trading-tasks.index'));
+        $this->assertDatabaseHas('orb_ownings', [
+            'account_id' => $task->trader_id,
+            'dragon_id' => $task->dragon_id,
+            'jumlah_orb' => 5,
+        ]);
+    }
+
     public function test_done_trade_requires_enough_trader_orbs(): void
     {
         $task = TradingTask::factory()->create(['status_trade' => 'recalling']);

@@ -39,7 +39,10 @@
     <div class="col-md-8">
         <div class="card">
             <div class="card-header">
-                <h5>Add Dragon to {{ $account->account_name }}</h5>
+                <div class="d-flex flex-wrap justify-content-between align-items-center">
+                    <h5 class="mb-2 mb-md-0">Add Dragon to {{ $account->account_name }}</h5>
+                    <a href="{{ route('dragon-ownings.quick-create', $account) }}" class="btn btn-success btn-sm">Tambah Cepat</a>
+                </div>
             </div>
             <div class="card-body">
                 <form action="{{ route('dragon-owning-details.store', $account) }}" method="POST">

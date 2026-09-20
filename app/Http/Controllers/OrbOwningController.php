@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Account;
 use App\Models\Dragon;
+use App\Models\DragonOwningDetail;
 use App\Models\OrbOwning;
 use App\Models\Rarity;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,8 @@ class OrbOwningController extends Controller
         $selectedAccountId = $request->query('account_id');
         $selectedRarityId = $request->query('rarity_id');
         $selectedOwnershipStatus = $request->query('owned_status');
+        $selectedAccountOneOwnershipStatus = $request->query('account_one_owned_status');
+        $selectedRescueStatus = $request->query('is_rescue');
         $accounts = Account::orderBy('account_name')->get();
         $rarities = Rarity::orderBy('name')->get();
 
@@ -23,6 +26,7 @@ class OrbOwningController extends Controller
                 'dragons.id',
                 'dragons.dragon_name',
                 'dragons.summon_time',
+                'dragons.orb_to_summon',
                 'rarities.name as rarity_name',
                 DB::raw('COALESCE(orb_ownings.jumlah_orb, 0) as jumlah_orb'),
                 DB::raw('CASE WHEN dragon_owning_details.id IS NOT NULL THEN 1 ELSE 0 END as owned')
@@ -55,10 +59,32 @@ class OrbOwningController extends Controller
             ->when($selectedOwnershipStatus === 'not_owned', function ($query) {
                 $query->whereNull('dragon_owning_details.id');
             })
+            ->when($selectedAccountOneOwnershipStatus === 'owned', function ($query) {
+                $query->whereExists(function ($subquery) {
+                    $subquery->select(DB::raw(1))
+                        ->from('dragon_owning_details as account_one_ownings')
+                        ->whereColumn('account_one_ownings.dragon_id', 'dragons.id')
+                        ->where('account_one_ownings.account_id', 1);
+                });
+            })
+            ->when($selectedAccountOneOwnershipStatus === 'not_owned', function ($query) {
+                $query->whereNotExists(function ($subquery) {
+                    $subquery->select(DB::raw(1))
+                        ->from('dragon_owning_details as account_one_ownings')
+                        ->whereColumn('account_one_ownings.dragon_id', 'dragons.id')
+                        ->where('account_one_ownings.account_id', 1);
+                });
+            })
+            ->when($selectedRescueStatus === 'yes', function ($query) {
+                $query->where('dragons.is_rescue', true);
+            })
+            ->when($selectedRescueStatus === 'no', function ($query) {
+                $query->where('dragons.is_rescue', false);
+            })
             ->orderBy('dragons.dragon_name')
             ->get();
 
-        return view('orb-ownings.index', compact('dragons', 'accounts', 'rarities', 'selectedAccountId', 'selectedRarityId', 'selectedOwnershipStatus'));
+        return view('orb-ownings.index', compact('dragons', 'accounts', 'rarities', 'selectedAccountId', 'selectedRarityId', 'selectedOwnershipStatus', 'selectedAccountOneOwnershipStatus', 'selectedRescueStatus'));
     }
 
     public function create()
@@ -158,6 +184,26 @@ class OrbOwningController extends Controller
                 'id' => $orbOwning->id,
                 'jumlah_orb' => $orbOwning->jumlah_orb,
             ],
+        ]);
+    }
+
+    public function dragonOwners(Request $request, Dragon $dragon)
+    {
+        $owners = DragonOwningDetail::with('account:id,account_name')
+            ->where('dragon_id', $dragon->id)
+            ->when($request->query('exclude_account_id'), function ($query, $accountId) {
+                $query->where('account_id', '!=', $accountId);
+            })
+            ->get()
+            ->map(fn ($detail) => [
+                'id' => $detail->account->id,
+                'account_name' => $detail->account->account_name,
+            ])
+            ->values();
+
+        return response()->json([
+            'dragon_name' => $dragon->dragon_name,
+            'owners' => $owners,
         ]);
     }
 }

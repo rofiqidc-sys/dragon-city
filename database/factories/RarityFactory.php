@@ -15,6 +15,7 @@ class RarityFactory extends Factory
             'name' => $this->faker->word(),
             'alias' => $this->faker->word(),
             'key_need_to_summon' => $this->faker->word(),
+            'orb_per_trade' => $this->faker->numberBetween(1, 100),
         ];
     }
 }

@@ -119,6 +119,7 @@
                                 <th>Dragon Book</th>
                                 <th>Dragon Name</th>
                                 <th>Rarity</th>
+                                <th>Aksi</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -157,7 +158,20 @@
                     { data: 'dragon_id' },
                     { data: 'dragon_book' },
                     { data: 'dragon_name' },
-                    { data: 'rarity' }
+                    { data: 'rarity' },
+                    {
+                        data: null,
+                        orderable: false,
+                        searchable: false,
+                        render(data, type, row) {
+                            const deleteUrl = '{{ url('/dragon-owning-details/' . $account->id) }}/' + row.dragon_owning_detail_id;
+                            return '<form class="delete-dragon-form" action="' + deleteUrl + '" method="POST">'
+                                + '<input type="hidden" name="_token" value="{{ csrf_token() }}">'
+                                + '<input type="hidden" name="_method" value="DELETE">'
+                                + '<button type="submit" class="btn btn-sm btn-danger">Hapus</button>'
+                                + '</form>';
+                        }
+                    }
                 ],
                 responsive: true,
                 autoWidth: false,
@@ -199,6 +213,32 @@
             $('#rarity_filter').on('change', function () {
                 const value = $(this).val();
                 table.column(3).search(value ? '^' + value + '$' : '', true, false).draw();
+            });
+
+            $('#owned-dragons-table').on('submit', '.delete-dragon-form', function (event) {
+                event.preventDefault();
+                const form = $(this);
+
+                if (!window.confirm('Hapus dragon ini dari kepemilikan account?')) {
+                    return;
+                }
+
+                $.ajax({
+                    url: form.attr('action'),
+                    method: 'DELETE',
+                    dataType: 'json',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success(response) {
+                        table.row(form.closest('tr')).remove().draw(false);
+                        showToast(response.message, true);
+                    },
+                    error(xhr) {
+                        const message = xhr.responseJSON?.message || 'Terjadi kesalahan saat menghapus dragon.';
+                        showToast(message, false);
+                    }
+                });
             });
 
             $('#add-dragon-form').on('submit', function (event) {

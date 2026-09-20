@@ -22,21 +22,21 @@ class RarityController extends Controller
     public function updateSeeder()
     {
         $defaultRarities = [
-            ['id' => 1, 'name' => 'Common', 'alias' => 'c', 'key_need_to_summon' => null],
-            ['id' => 2, 'name' => 'Rare', 'alias' => 'r', 'key_need_to_summon' => null],
-            ['id' => 3, 'name' => 'Very Rare', 'alias' => 'vr', 'key_need_to_summon' => null],
-            ['id' => 4, 'name' => 'Epic', 'alias' => 'e', 'key_need_to_summon' => null],
-            ['id' => 5, 'name' => 'Legendary', 'alias' => 'l', 'key_need_to_summon' => null],
-            ['id' => 6, 'name' => 'Mythical', 'alias' => 'm', 'key_need_to_summon' => null],
-            ['id' => 7, 'name' => 'Heroic', 'alias' => 'h', 'key_need_to_summon' => null],
-            ['id' => 8, 'name' => 'Divine', 'alias' => 'd', 'key_need_to_summon' => null],
-            ['id' => 9, 'name' => 'Pure', 'alias' => 'p', 'key_need_to_summon' => null],
-            ['id' => 10, 'name' => 'Ancient', 'alias' => 'an', 'key_need_to_summon' => null],
-            ['id' => 11, 'name' => 'Mystic', 'alias' => 'me', 'key_need_to_summon' => null],
+            ['id' => 1, 'name' => 'Common', 'alias' => 'c', 'key_need_to_summon' => null, 'orb_per_trade' => null],
+            ['id' => 2, 'name' => 'Rare', 'alias' => 'r', 'key_need_to_summon' => null, 'orb_per_trade' => null],
+            ['id' => 3, 'name' => 'Very Rare', 'alias' => 'vr', 'key_need_to_summon' => null, 'orb_per_trade' => null],
+            ['id' => 4, 'name' => 'Epic', 'alias' => 'e', 'key_need_to_summon' => null, 'orb_per_trade' => null],
+            ['id' => 5, 'name' => 'Legendary', 'alias' => 'l', 'key_need_to_summon' => null, 'orb_per_trade' => null],
+            ['id' => 6, 'name' => 'Mythical', 'alias' => 'm', 'key_need_to_summon' => null, 'orb_per_trade' => null],
+            ['id' => 7, 'name' => 'Heroic', 'alias' => 'h', 'key_need_to_summon' => null, 'orb_per_trade' => null],
+            ['id' => 8, 'name' => 'Divine', 'alias' => 'd', 'key_need_to_summon' => null, 'orb_per_trade' => null],
+            ['id' => 9, 'name' => 'Pure', 'alias' => 'p', 'key_need_to_summon' => null, 'orb_per_trade' => null],
+            ['id' => 10, 'name' => 'Ancient', 'alias' => 'an', 'key_need_to_summon' => null, 'orb_per_trade' => null],
+            ['id' => 11, 'name' => 'Mystic', 'alias' => 'me', 'key_need_to_summon' => null, 'orb_per_trade' => null],
         ];
 
         $rarities = Rarity::query()
-            ->select(['id', 'name', 'alias', 'key_need_to_summon'])
+            ->select(['id', 'name', 'alias', 'key_need_to_summon', 'orb_per_trade'])
             ->get();
 
         $payload = $rarities->isNotEmpty() ? $rarities->map(function ($rarity) {
@@ -45,6 +45,7 @@ class RarityController extends Controller
                 'name' => $rarity->name,
                 'alias' => $rarity->alias,
                 'key_need_to_summon' => $rarity->key_need_to_summon,
+                'orb_per_trade' => $rarity->orb_per_trade,
             ];
         })->values()->all() : $defaultRarities;
 
@@ -87,6 +88,7 @@ PHP;
             'name' => 'required|string|max:255',
             'alias' => 'nullable|string|max:255',
             'key_need_to_summon' => 'nullable|string|max:255',
+            'orb_per_trade' => 'nullable|integer|min:0',
         ]);
 
         Rarity::create($request->all());
@@ -105,6 +107,7 @@ PHP;
             'name' => 'required|string|max:255',
             'alias' => 'nullable|string|max:255',
             'key_need_to_summon' => 'nullable|string|max:255',
+            'orb_per_trade' => 'nullable|integer|min:0',
         ]);
 
         $rarity->update($request->all());

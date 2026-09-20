@@ -38,12 +38,32 @@ class RarityCrudTest extends TestCase
             'name' => 'Legendary',
             'alias' => 'Leg',
             'key_need_to_summon' => 'legendary-key',
+            'orb_per_trade' => 25,
         ]);
 
         $response->assertRedirect('/rarities');
         $this->assertDatabaseHas('rarities', [
             'name' => 'Legendary',
             'alias' => 'Leg',
+            'orb_per_trade' => 25,
+        ]);
+    }
+
+    public function test_user_can_update_orb_per_trade(): void
+    {
+        $rarity = Rarity::factory()->create(['orb_per_trade' => 10]);
+
+        $response = $this->put(route('rarities.update', $rarity), [
+            'name' => $rarity->name,
+            'alias' => $rarity->alias,
+            'key_need_to_summon' => $rarity->key_need_to_summon,
+            'orb_per_trade' => 30,
+        ]);
+
+        $response->assertRedirect('/rarities');
+        $this->assertDatabaseHas('rarities', [
+            'id' => $rarity->id,
+            'orb_per_trade' => 30,
         ]);
     }
 }

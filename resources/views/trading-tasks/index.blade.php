@@ -54,6 +54,10 @@
                             </span>
                         </td>
                         <td>
+                            <form action="{{ route('trading-tasks.add-orb', $task) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit" class="btn btn-sm btn-info" title="Tambahkan 1 orb ke trader">+ Orb</button>
+                            </form>
                             <a href="{{ route('trading-tasks.edit', $task) }}" class="btn btn-sm btn-warning">Edit</a>
                             <form action="{{ route('trading-tasks.destroy', $task) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this trading task?')">
                                 @csrf

@@ -53,7 +53,7 @@ class DragonOwningDetailController extends Controller
         return redirect()->route('dragon-ownings.show', $account)->with('success', $message);
     }
 
-    public function destroy(Account $account, DragonOwningDetail $dragonOwningDetail)
+    public function destroy(Request $request, Account $account, DragonOwningDetail $dragonOwningDetail)
     {
         if ($dragonOwningDetail->account_id !== $account->id) {
             abort(403);
@@ -61,6 +61,13 @@ class DragonOwningDetailController extends Controller
 
         $dragonName = $dragonOwningDetail->dragon->dragon_name;
         $dragonOwningDetail->delete();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Dragon '{$dragonName}' removed from account successfully.",
+            ]);
+        }
 
         return redirect()->route('dragon-ownings.index')->with('success', "Dragon '{$dragonName}' removed from account successfully.");
     }

@@ -45,6 +45,7 @@
                                 <th>Name</th>
                                 <th>Alias</th>
                                 <th>Key Need To Summon</th>
+                                <th>Orb Per Trade</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -55,6 +56,7 @@
                                     <td>{{ $rarity->name }}</td>
                                     <td>{{ $rarity->alias }}</td>
                                     <td>{{ $rarity->key_need_to_summon }}</td>
+                                    <td>{{ $rarity->orb_per_trade }}</td>
                                     <td>
                                         <a href="{{ route('rarities.edit', $rarity) }}" class="btn btn-sm btn-warning">Edit</a>
                                         <form action="{{ route('rarities.destroy', $rarity) }}" method="POST" style="display:inline;">
@@ -66,7 +68,7 @@
                                 </tr>
                             @empty
                                 <tr class="table-info">
-                                    <td colspan="5" class="text-center">No rarities found.</td>
+                                    <td colspan="6" class="text-center">No rarities found.</td>
                                 </tr>
                             @endforelse
                         </tbody>

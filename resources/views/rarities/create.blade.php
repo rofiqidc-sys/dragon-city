@@ -41,6 +41,10 @@
                         <label for="key_need_to_summon">Key Need To Summon</label>
                         <input type="text" name="key_need_to_summon" id="key_need_to_summon" class="form-control">
                     </div>
+                    <div class="form-group">
+                        <label for="orb_per_trade">Orb Per Trade</label>
+                        <input type="number" name="orb_per_trade" id="orb_per_trade" class="form-control" min="0" value="{{ old('orb_per_trade') }}">
+                    </div>
                     <button type="submit" class="btn btn-primary">Save</button>
                     <a href="{{ route('rarities.index') }}" class="btn btn-secondary">Cancel</a>
                 </form>

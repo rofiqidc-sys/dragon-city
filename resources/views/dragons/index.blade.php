@@ -150,6 +150,12 @@
                             </button>
                         </div>
                         <div class="col-auto">
+                            <button type="button" class="d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: #e8f5e9; color: #2e8b57; border: none; border-radius: 50%; transition: all 0.2s ease-in-out; cursor: pointer;" title="Tambahkan ke account" data-toggle="modal" data-target="#addDragonModal-{{ $dragon->id }}" onmouseover="this.style.background='#c8e6c9'; this.style.transform='scale(1.1)'" onmouseout="this.style.background='#e8f5e9'; this.style.transform='scale(1)'">
+                                <i class="fas fa-plus" style="font-size: 16px;"></i>
+                                <span class="sr-only">Tambahkan ke account</span>
+                            </button>
+                        </div>
+                        <div class="col-auto">
                             <a href="{{ route('dragons.edit', $dragon) }}" class="d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: #e3f2fd; color: #2e8b57; border: none; border-radius: 50%; transition: all 0.2s ease-in-out; display: flex; align-items: center; justify-content: center;" title="Edit" onmouseover="this.style.background='#bbdefb'; this.style.transform='scale(1.1)'" onmouseout="this.style.background='#e3f2fd'; this.style.transform='scale(1)'">
                                 <i class="fas fa-pencil-alt" style="font-size: 16px;"></i>
                             </a>
@@ -172,6 +178,35 @@
                             </form>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="addDragonModal-{{ $dragon->id }}" tabindex="-1" role="dialog" aria-labelledby="addDragonModalLabel-{{ $dragon->id }}" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addDragonModalLabel-{{ $dragon->id }}">Tambahkan {{ $dragon->dragon_name }}</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Tutup">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form action="{{ url('/dragon-owning-details') }}" method="POST" class="add-dragon-form">
+                        @csrf
+                        <input type="hidden" name="dragon_id" value="{{ $dragon->id }}">
+                        <div class="modal-body">
+                            <label for="account-{{ $dragon->id }}">Pilih account</label>
+                            <select id="account-{{ $dragon->id }}" name="account" class="form-control" required>
+                                <option value="">-- Pilih Account --</option>
+                                @foreach($accounts as $account)
+                                    <option value="{{ $account->id }}">{{ $account->account_name }} (ID {{ $account->id }})</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-success"><i class="fas fa-plus mr-1"></i> Tambahkan</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -338,6 +373,13 @@
 </div>
 
 <script>
+document.querySelectorAll('.add-dragon-form').forEach(function (form) {
+    form.addEventListener('submit', function () {
+        const accountId = form.querySelector('select[name="account"]').value;
+        form.action = '{{ url('/dragon-owning-details') }}/' + accountId;
+    });
+});
+
 function confirmDragonReset(form) {
     const confirmation = window.prompt('Backup otomatis akan dibuat, tetapi semua data dragon akan dikosongkan. Ketik TRUNCATE DRAGONS untuk melanjutkan:');
     if (confirmation !== 'TRUNCATE DRAGONS') return false;

@@ -50,6 +50,14 @@
                             <tr>
                                 <th>#</th>
                                 <th>
+                                    <a href="{{ route('accounts.index', ['sort' => 'id', 'direction' => $direction === 'asc' ? 'desc' : 'asc']) }}" class="text-dark">
+                                        ID
+                                        @if($sortField === 'id')
+                                            <i class="fas fa-sort-{{ $direction === 'asc' ? 'up' : 'down' }} ml-1"></i>
+                                        @endif
+                                    </a>
+                                </th>
+                                <th>
                                     <a href="{{ route('accounts.index', ['sort' => 'account_name', 'direction' => $direction === 'asc' ? 'desc' : 'asc']) }}" class="text-dark">
                                         Account Name
                                         @if($sortField === 'account_name')
@@ -96,6 +104,7 @@
                             @forelse($accounts as $index => $account)
                                 <tr class="{{ $index % 2 === 0 ? 'table-active' : '' }} {{ $account->account_status === 'active' ? 'table-success' : 'table-danger' }}">
                                     <td>{{ $index + 1 }}</td>
+                                    <td>{{ $account->id }}</td>
                                     <td>{{ $account->account_name }}</td>
                                     <td>
                                         {{ $account->fb_mail }}

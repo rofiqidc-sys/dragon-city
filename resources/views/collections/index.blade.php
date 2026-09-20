@@ -48,6 +48,9 @@
                 <button type="button" class="btn btn-info mr-2 mb-2" data-toggle="modal" data-target="#dragonRewardsModal">
                     <i class="fas fa-search"></i> Check Dragon
                 </button>
+                <a href="{{ route('collections.unowned-members') }}" class="btn btn-primary mr-2 mb-2">
+                    <i class="fas fa-dragon mr-1"></i> Dragon Collection Belum Dimiliki
+                </a>
             </div>
             <form method="GET" action="{{ route('collections.index') }}" class="d-flex align-items-center mb-2" style="min-width: 320px;">
                 <input type="search" name="search" class="form-control" value="{{ $search ?? '' }}" placeholder="Cari dragon anggota collection (min. 3 huruf)" aria-label="Cari dragon anggota collection">
@@ -151,12 +154,13 @@
                                 <th>Rarity</th>
                                 <th>Collection</th>
                                 <th>Member Collection</th>
+                                <th>Orb Account #1</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
                         <tbody id="dragonRewardsTableBody">
                             <tr>
-                                <td colspan="6" class="text-center text-muted">Loading...</td>
+                                <td colspan="7" class="text-center text-muted">Loading...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -178,7 +182,7 @@
         tbody.empty();
 
         if (data.length === 0) {
-            tbody.append('<tr><td colspan="6" class="text-center text-muted">No dragon rewards found</td></tr>');
+            tbody.append('<tr><td colspan="7" class="text-center text-muted">No dragon rewards found</td></tr>');
             return;
         }
 
@@ -199,6 +203,7 @@
             row.append('<td>' + dragon.rarity + '</td>');
             row.append('<td>' + dragon.collection_name + '</td>');
             row.append('<td>' + memberBadge + '</td>');
+            row.append('<td>' + (dragon.jumlah_orb || 0) + '</td>');
             row.append('<td>' + statusBadge + '</td>');
             
             tbody.append(row);
@@ -241,7 +246,7 @@
                 renderTable(dragonRewardsData);
             },
             error: function() {
-                $('#dragonRewardsTableBody').html('<tr><td colspan="6" class="text-center text-danger">Error loading data</td></tr>');
+                $('#dragonRewardsTableBody').html('<tr><td colspan="7" class="text-center text-danger">Error loading data</td></tr>');
             }
         });
     });

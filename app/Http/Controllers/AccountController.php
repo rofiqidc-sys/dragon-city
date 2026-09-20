@@ -12,7 +12,7 @@ class AccountController extends Controller
         $sortField = $request->get('sort', 'created_at');
         $sortDirection = $request->get('direction', 'desc');
 
-        $allowedSortFields = ['account_name', 'fb_mail', 'gmail', 'ms_mail', 'account_status', 'created_at'];
+        $allowedSortFields = ['id','account_name', 'fb_mail', 'gmail', 'ms_mail', 'account_status', 'created_at'];
         if (!in_array($sortField, $allowedSortFields, true)) {
             $sortField = 'created_at';
         }

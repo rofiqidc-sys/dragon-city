@@ -28,12 +28,15 @@ Route::post('/rarities/update-seeder', [RarityController::class, 'updateSeeder']
 Route::resource('elements', ElementController::class);
 Route::resource('rarities', RarityController::class);
 Route::resource('dragons', DragonController::class);
+Route::post('/trading-tasks/{tradingTask}/add-orb', [TradingTaskController::class, 'addOrbToTrader'])->name('trading-tasks.add-orb');
 Route::resource('trading-tasks', TradingTaskController::class)->except(['show']);
 Route::get('/master-dragons', [DragonController::class, 'masterDragon'])->name('master-dragons.index');
 Route::get('/target-dragons', [DragonController::class, 'targetDragon'])->name('target-dragons.index');
 
 Route::get('/dragon-ownings', [DragonOwningController::class, 'index'])->name('dragon-ownings.index');
 Route::get('/dragon-ownings/{account}/create', [DragonOwningController::class, 'create'])->name('dragon-ownings.create');
+Route::get('/dragon-ownings/{account}/quick-create', [DragonOwningController::class, 'quickCreate'])->name('dragon-ownings.quick-create');
+Route::post('/dragon-ownings/{account}/quick-create', [DragonOwningController::class, 'quickStore'])->name('dragon-ownings.quick-store');
 Route::get('/dragon-ownings/{account}/search', [DragonOwningController::class, 'search'])->name('dragon-ownings.search');
 Route::get('/dragon-ownings/{account}/data', [DragonOwningController::class, 'data'])->name('dragon-ownings.data');
 Route::get('/dragon-ownings/{account}', [DragonOwningController::class, 'show'])->name('dragon-ownings.show');
@@ -48,10 +51,12 @@ Route::get('/orb-ownings/{orbOwning}/edit', [App\Http\Controllers\OrbOwningContr
 Route::put('/orb-ownings/{orbOwning}', [App\Http\Controllers\OrbOwningController::class, 'update'])->name('orb-ownings.update');
 Route::delete('/orb-ownings/{orbOwning}', [App\Http\Controllers\OrbOwningController::class, 'destroy'])->name('orb-ownings.destroy');
 Route::post('/orb-ownings/upsert', [App\Http\Controllers\OrbOwningController::class, 'upsert'])->name('orb-ownings.upsert');
+Route::get('/orb-ownings/dragon/{dragon}/owners', [App\Http\Controllers\OrbOwningController::class, 'dragonOwners'])->name('orb-ownings.dragon-owners');
 
 Route::get('/collections', [CollectionController::class, 'index'])->name('collections.index');
 Route::post('/collections/calculate-achievement', [CollectionController::class, 'calculateAchievement'])->name('collections.calculate-achievement');
 Route::get('/collections/dragon-rewards', [CollectionController::class, 'dragonRewards'])->name('collections.dragon-rewards');
+Route::get('/collections/unowned-members', [CollectionController::class, 'unownedMembers'])->name('collections.unowned-members');
 Route::get('/collections/create', [CollectionController::class, 'create'])->name('collections.create');
 Route::post('/collections', [CollectionController::class, 'store'])->name('collections.store');
 Route::get('/collections/{collection}', [CollectionController::class, 'show'])->name('collections.show');
