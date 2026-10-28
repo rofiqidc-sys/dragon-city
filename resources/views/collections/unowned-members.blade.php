@@ -74,6 +74,7 @@
                                 <th>Orb Account #1</th>
                                 <th>Orb Account Pembanding</th>
                                 <th>Collection</th>
+                                <th style="width: 60px;">Info</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -112,10 +113,23 @@
                                         <small class="orb-save-status text-muted d-block"></small>
                                     </td>
                                     <td>{{ $dragon->collections->pluck('collection_name')->join(', ') }}</td>
+                                    <td class="text-center align-middle">
+                                        <button
+                                            type="button"
+                                            class="btn btn-outline-secondary btn-sm info-orb-button"
+                                            data-toggle="modal"
+                                            data-target="#orbInfoModal"
+                                            data-dragon-name="{{ $dragon->dragon_name }}"
+                                            data-orb-summary='@json($dragon->orb_details_by_account ?? [])'
+                                            aria-label="Info jumlah orb {{ $dragon->dragon_name }}"
+                                        >
+                                            <strong>i</strong>
+                                        </button>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted">Tidak ada dragon yang sesuai.</td>
+                                    <td colspan="8" class="text-center text-muted">Tidak ada dragon yang sesuai.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -129,6 +143,25 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="orbInfoModal" tabindex="-1" role="dialog" aria-labelledby="orbInfoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="orbInfoModalLabel">Info Orb</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="orbInfoModalContent" class="text-left"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -136,6 +169,23 @@
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
 <script>
+    function renderOrbSummaryModal(summary, dragonName) {
+        let rows = [];
+
+        if (Array.isArray(summary) && summary.length) {
+            rows = summary.map(function (item) {
+                return '<div class="d-flex justify-content-between py-1 border-bottom"><span>' + (item.account_name || 'Account') + '</span><strong>' + (item.jumlah_orb ?? 0) + '</strong></div>';
+            });
+        }
+
+        if (!rows.length) {
+            rows.push('<div class="text-muted">Belum ada data orb.</div>');
+        }
+
+        $('#orbInfoModalLabel').text('Orb ' + dragonName);
+        $('#orbInfoModalContent').html('<div style="min-width: 220px;">' + rows.join('') + '</div>');
+    }
+
     $(function () {
         $('#unowned-members-table').DataTable({
             paging: false,
@@ -149,6 +199,24 @@
             language: {
                 emptyTable: 'Tidak ada dragon yang sesuai.'
             }
+        });
+
+        $('.info-orb-button').on('click', function () {
+            const dragonName = $(this).data('dragon-name') || 'Dragon';
+            const rawSummary = $(this).data('orb-summary');
+            let summary = [];
+
+            if (typeof rawSummary === 'string') {
+                try {
+                    summary = JSON.parse(rawSummary);
+                } catch (error) {
+                    summary = [];
+                }
+            } else if (Array.isArray(rawSummary)) {
+                summary = rawSummary;
+            }
+
+            renderOrbSummaryModal(summary, dragonName);
         });
     });
 

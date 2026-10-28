@@ -91,11 +91,21 @@ class CollectionController extends Controller
             ->paginate(24)
             ->withQueryString();
 
-        $dragons->getCollection()->transform(function ($dragon) use ($orbCounts, $selectedAccountId) {
+        $dragons->getCollection()->transform(function ($dragon) use ($orbCounts, $selectedAccountId, $accounts) {
             $dragon->jumlah_orb_account_one = (int) ($orbCounts['1:' . $dragon->id]->jumlah_orb ?? 0);
             $dragon->jumlah_orb_selected_account = $selectedAccountId
                 ? (int) ($orbCounts[(int) $selectedAccountId . ':' . $dragon->id]->jumlah_orb ?? 0)
                 : 0;
+            $dragon->orb_details_by_account = $accounts
+                ->map(function ($account) use ($orbCounts, $dragon) {
+                    return [
+                        'account_id' => $account->id,
+                        'account_name' => $account->account_name,
+                        'jumlah_orb' => (int) ($orbCounts[$account->id . ':' . $dragon->id]->jumlah_orb ?? 0),
+                    ];
+                })
+                ->values()
+                ->all();
             $dragon->is_owned_by_selected_account = (bool) $selectedAccountId
                 && $dragon->dragonOwningDetails->isNotEmpty();
 

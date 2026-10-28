@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Account;
 use App\Models\Rarity;
 use App\Models\UnownedDragon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class UnownedDragonController extends Controller
 {
@@ -17,6 +19,12 @@ class UnownedDragonController extends Controller
             'is_collection' => ['nullable', 'in:0,1'],
         ]);
         $rarities = Rarity::orderBy('name')->get();
+        $accounts = Account::orderBy('account_name')->get();
+        $accountIds = $accounts->pluck('id')->all();
+        $orbCounts = DB::table('orb_ownings')
+            ->whereIn('account_id', $accountIds)
+            ->get(['account_id', 'dragon_id', 'jumlah_orb'])
+            ->groupBy('dragon_id');
 
         $unownedDragons = UnownedDragon::with([
             'dragon.rarity',
@@ -34,6 +42,25 @@ class UnownedDragonController extends Controller
             ->orderBy('dragon_id')
             ->paginate(12)
             ->withQueryString();
+
+        $unownedDragons->getCollection()->transform(function ($unownedDragon) use ($accounts, $orbCounts) {
+            $dragon = $unownedDragon->dragon;
+            $dragonOrbRecords = collect($orbCounts->get($dragon->id, []));
+            $dragon->orb_details_by_account = $accounts
+                ->map(function ($account) use ($dragonOrbRecords) {
+                    $record = $dragonOrbRecords->firstWhere('account_id', $account->id);
+
+                    return [
+                        'account_id' => $account->id,
+                        'account_name' => $account->account_name,
+                        'jumlah_orb' => (int) ($record->jumlah_orb ?? 0),
+                    ];
+                })
+                ->values()
+                ->all();
+
+            return $unownedDragon;
+        });
 
         return view('unowned-dragons.index', [
             'unownedDragons' => $unownedDragons,
