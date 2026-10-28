@@ -7,6 +7,7 @@ use App\Models\Account;
 use App\Models\Element;
 use App\Models\Rarity;
 use App\Services\DragonBookScraper;
+use App\Services\UnownedDragonSynchronizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -465,6 +466,8 @@ PHP;
                     DB::table($table)->insert($backup[$table]);
                 }
             }
+
+            UnownedDragonSynchronizer::syncAll();
         });
 
         return redirect()->route('dragons.index')->with('success', 'Latest dragon backup restored successfully.');

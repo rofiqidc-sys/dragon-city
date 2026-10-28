@@ -40,6 +40,9 @@
                     <a href="{{ route('master-dragons.index') }}" class="nav-link"><span class="pcoded-micon"><i class="feather icon-user"></i></span><span class="pcoded-mtext">Master Dragon</span></a>
                 </li>
                 <li class="nav-item">
+                    <a href="{{ route('unowned-dragons.index') }}" class="nav-link"><span class="pcoded-micon"><i class="feather icon-user"></i></span><span class="pcoded-mtext">Unowned Dragon</span></a>
+                </li>
+                <li class="nav-item">
                     <a href="#" class="nav-link"><span class="pcoded-micon"><i class="feather icon-user"></i></span><span class="pcoded-mtext">Food Producer Dragon</span></a>
                 </li>
                 <li class="nav-item pcoded-menu-caption">

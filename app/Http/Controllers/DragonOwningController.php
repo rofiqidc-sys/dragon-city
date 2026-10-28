@@ -62,16 +62,10 @@ class DragonOwningController extends Controller
             ->diff($ownedDragonIds)
             ->values();
 
-        $now = now();
-        $rows = $dragonIds->map(fn ($dragonId) => [
-            'account_id' => $account->id,
-            'dragon_id' => $dragonId,
-            'created_at' => $now,
-            'updated_at' => $now,
-        ])->all();
-
-        if ($rows) {
-            DragonOwningDetail::insert($rows);
+        if ($dragonIds->isNotEmpty()) {
+            $account->dragonOwningDetails()->createMany(
+                $dragonIds->map(fn ($dragonId) => ['dragon_id' => $dragonId])->all()
+            );
         }
 
         return redirect()
@@ -79,7 +73,7 @@ class DragonOwningController extends Controller
                 'account' => $account,
                 'rarity' => $request->input('rarity'),
             ])
-            ->with('success', count($rows) . ' dragon berhasil ditambahkan ke account.');
+            ->with('success', $dragonIds->count() . ' dragon berhasil ditambahkan ke account.');
     }
 
     public function show(Account $account)

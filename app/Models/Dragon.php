@@ -7,10 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use App\Services\UnownedDragonSynchronizer;
 
 class Dragon extends Model
 {
     use HasFactory;
+
+    protected static function booted(): void
+    {
+        static::created(fn (self $dragon) => UnownedDragonSynchronizer::sync($dragon->id));
+    }
 
     protected $fillable = [
         'dragon_book',

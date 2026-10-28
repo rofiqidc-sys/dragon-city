@@ -9,6 +9,7 @@ use App\Http\Controllers\ElementController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\RarityController;
 use App\Http\Controllers\TradingTaskController;
+use App\Http\Controllers\UnownedDragonController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -32,6 +33,7 @@ Route::post('/trading-tasks/{tradingTask}/add-orb', [TradingTaskController::clas
 Route::resource('trading-tasks', TradingTaskController::class)->except(['show']);
 Route::get('/master-dragons', [DragonController::class, 'masterDragon'])->name('master-dragons.index');
 Route::get('/target-dragons', [DragonController::class, 'targetDragon'])->name('target-dragons.index');
+Route::get('/unowned-dragons', [UnownedDragonController::class, 'index'])->name('unowned-dragons.index');
 
 Route::get('/dragon-ownings', [DragonOwningController::class, 'index'])->name('dragon-ownings.index');
 Route::get('/dragon-ownings/{account}/create', [DragonOwningController::class, 'create'])->name('dragon-ownings.create');

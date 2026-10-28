@@ -11,6 +11,13 @@ class Account extends Model
 {
     use HasFactory;
 
+    protected static function booted(): void
+    {
+        static::deleting(function (self $account) {
+            $account->dragonOwningDetails->each(fn (DragonOwningDetail $detail) => $detail->delete());
+        });
+    }
+
     protected $fillable = [
         'account_name',
         'fb_mail',
