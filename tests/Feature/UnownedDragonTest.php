@@ -6,7 +6,9 @@ use App\Models\Account;
 use App\Models\Dragon;
 use App\Models\DragonOwningDetail;
 use App\Models\Element;
+use App\Models\OrbOwning;
 use App\Models\Rarity;
+use App\Models\TradingTask;
 use App\Models\UnownedDragon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -32,6 +34,63 @@ class UnownedDragonTest extends TestCase
             ->assertDontSee('Owned Dragon');
         $this->assertDatabaseHas('unowned_dragons', ['dragon_id' => $unowned->id]);
         $this->assertDatabaseMissing('unowned_dragons', ['dragon_id' => $owned->id]);
+    }
+
+    public function test_unowned_dragons_page_hides_dragons_already_in_trading_tasks(): void
+    {
+        $trader = Account::factory()->create();
+        $reciever = Account::factory()->create();
+        $tradedDragon = Dragon::factory()->create(['dragon_name' => 'Dragon In Trading Task']);
+        $unownedDragon = Dragon::factory()->create(['dragon_name' => 'Unowned Dragon']);
+
+        TradingTask::create([
+            'dragon_id' => $tradedDragon->id,
+            'trader_id' => $trader->id,
+            'reciever_id' => $reciever->id,
+            'jumlah_orb' => 1,
+            'status_trade' => 'done',
+        ]);
+
+        $response = $this->get(route('unowned-dragons.index'));
+
+        $response->assertOk()
+            ->assertDontSee('Dragon In Trading Task')
+            ->assertSee('Unowned Dragon');
+    }
+
+    public function test_unowned_dragons_page_hides_dragons_with_more_than_79_orbs_across_accounts(): void
+    {
+        $firstAccount = Account::factory()->create();
+        $secondAccount = Account::factory()->create();
+        $dragonOverLimit = Dragon::factory()->create(['dragon_name' => 'Dragon Over Orb Limit']);
+        $dragonAtLimit = Dragon::factory()->create(['dragon_name' => 'Dragon At Orb Limit']);
+
+        OrbOwning::create([
+            'account_id' => $firstAccount->id,
+            'dragon_id' => $dragonOverLimit->id,
+            'jumlah_orb' => 40,
+        ]);
+        OrbOwning::create([
+            'account_id' => $secondAccount->id,
+            'dragon_id' => $dragonOverLimit->id,
+            'jumlah_orb' => 40,
+        ]);
+        OrbOwning::create([
+            'account_id' => $firstAccount->id,
+            'dragon_id' => $dragonAtLimit->id,
+            'jumlah_orb' => 39,
+        ]);
+        OrbOwning::create([
+            'account_id' => $secondAccount->id,
+            'dragon_id' => $dragonAtLimit->id,
+            'jumlah_orb' => 40,
+        ]);
+
+        $response = $this->get(route('unowned-dragons.index'));
+
+        $response->assertOk()
+            ->assertDontSee('Dragon Over Orb Limit')
+            ->assertSee('Dragon At Orb Limit');
     }
 
     public function test_unowned_dragon_filters_can_be_combined(): void

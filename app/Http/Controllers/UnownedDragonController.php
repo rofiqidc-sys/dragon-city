@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Account;
 use App\Models\Rarity;
+use App\Models\TradingTask;
 use App\Models\UnownedDragon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -33,6 +34,13 @@ class UnownedDragonController extends Controller
             'dragon.element3',
             'dragon.element4',
         ])
+            ->whereNotIn('dragon_id', TradingTask::select('dragon_id'))
+            ->whereNotIn('dragon_id', function ($query) {
+                $query->select('dragon_id')
+                    ->from('orb_ownings')
+                    ->groupBy('dragon_id')
+                    ->havingRaw('SUM(jumlah_orb) > ?', [79]);
+            })
             ->whereHas('dragon', function (Builder $query) use ($filters) {
                 $query
                     ->when(isset($filters['rarity']), fn (Builder $query) => $query->where('rarity_id', $filters['rarity']))
