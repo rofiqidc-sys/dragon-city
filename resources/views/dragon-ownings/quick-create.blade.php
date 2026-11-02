@@ -22,7 +22,10 @@
 
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Dragon yang belum dimiliki: {{ $account->account_name }}</h5>
+        <div>
+            <h5 class="mb-0">{{ $showOwnedDragons ? 'Daftar semua Dragon:' : 'Dragon yang belum dimiliki:' }} {{ $account->account_name }}</h5>
+            <small class="d-block text-muted">Dragon dimiliki saat ini: {{ $ownedDragonCount }}</small>
+        </div>
         <a href="{{ route('dragon-ownings.show', $account) }}" class="btn btn-secondary btn-sm">Kembali</a>
     </div>
     <div class="card-body">
@@ -40,24 +43,43 @@
                 <button type="submit" class="btn btn-outline-primary">Filter</button>
                 <a href="{{ route('dragon-ownings.quick-create', $account) }}" class="btn btn-outline-secondary">Reset</a>
             </div>
+            @if($showOwnedDragons)
+                <input type="hidden" name="include_owned" value="1">
+            @endif
         </form>
 
         @if($dragons->isEmpty())
-            <p class="text-center text-muted mb-0">Semua dragon sudah dimiliki oleh account ini.</p>
+            <p class="text-center text-muted mb-0">Tidak ada Dragon yang cocok dengan filter ini.</p>
         @else
             <form action="{{ route('dragon-ownings.quick-store', $account) }}" method="POST">
                 @csrf
+                <input type="hidden" name="page" value="{{ $dragons->currentPage() }}">
+                @if($showOwnedDragons)
+                    <input type="hidden" name="include_owned" value="1">
+                @endif
                 @if($selectedRarity)
                     <input type="hidden" name="rarity" value="{{ $selectedRarity }}">
                 @endif
-                <div class="row">
+                <div class="mb-3">
+                    <a href="{{ route('dragon-ownings.quick-create', array_filter([
+                        'account' => $account,
+                        'rarity' => $selectedRarity,
+                        'include_owned' => $showOwnedDragons ? null : 1,
+                    ], fn ($value) => $value !== null)) }}" class="btn btn-outline-secondary btn-sm">
+                        {{ $showOwnedDragons ? 'Sembunyikan Dragon' : 'Tampilkan Dragon' }}
+                    </a>
+                </div>
+                <div id="dragon-grid" class="dragon-grid">
                     @foreach($dragons as $dragon)
-                        <div class="col-lg-4 col-md-6 mb-3">
+                        <div>
                             <div class="custom-control custom-checkbox border rounded p-3 h-100">
-                                <input type="checkbox" class="custom-control-input dragon-checkbox" id="dragon-{{ $dragon->id }}" name="dragon_ids[]" value="{{ $dragon->id }}">
+                                <input type="checkbox" class="custom-control-input dragon-checkbox" id="dragon-{{ $dragon->id }}" name="dragon_ids[]" value="{{ $dragon->id }}" {{ $ownedDragonIds->contains($dragon->id) ? 'disabled' : '' }}>
                                 <label class="custom-control-label d-block" for="dragon-{{ $dragon->id }}">
                                     <strong>{{ $dragon->dragon_name }}</strong>
                                     <small class="d-block text-muted">Book: {{ $dragon->dragon_book ?? '-' }} | Rarity: {{ $dragon->rarity->name ?? '-' }}</small>
+                                    @if($ownedDragonIds->contains($dragon->id))
+                                        <small class="badge badge-success mt-1">Dimiliki</small>
+                                    @endif
                                 </label>
                             </div>
                         </div>
@@ -86,4 +108,32 @@
         });
     });
 </script>
+@endpush
+
+@push('styles')
+<style>
+    .dragon-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    @media (max-width: 1199.98px) {
+        .dragon-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .dragon-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .dragon-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 @endpush

@@ -32,19 +32,23 @@ class DragonOwningController extends Controller
     {
         $selectedRarity = $request->query('rarity');
         $ownedDragonIds = $account->dragonOwningDetails()->pluck('dragon_id');
+        $ownedDragonCount = $ownedDragonIds->count();
+        $showOwnedDragons = $request->boolean('include_owned');
         $dragons = Dragon::with('rarity')
-            ->whereNotIn('id', $ownedDragonIds)
+            ->when(!$showOwnedDragons, function ($query) use ($ownedDragonIds) {
+                $query->whereNotIn('id', $ownedDragonIds);
+            })
             ->when($selectedRarity, function ($query) use ($selectedRarity) {
                 $query->where('rarity_id', $selectedRarity);
             })
             ->orderByRaw("CASE WHEN dragon_book ~ '^[0-9]+$' THEN 1 ELSE 0 END DESC")
             ->orderByRaw("LPAD(COALESCE(NULLIF(dragon_book, ''), '0'), 10, '0')")
             ->orderBy('dragon_name')
-            ->paginate(15)
+            ->paginate(20)
             ->withQueryString();
         $rarities = Rarity::orderBy('name')->get();
 
-        return view('dragon-ownings.quick-create', compact('account', 'dragons', 'rarities', 'selectedRarity'));
+        return view('dragon-ownings.quick-create', compact('account', 'dragons', 'rarities', 'selectedRarity', 'ownedDragonCount', 'ownedDragonIds', 'showOwnedDragons'));
     }
 
     public function quickStore(Request $request, Account $account)
@@ -72,6 +76,8 @@ class DragonOwningController extends Controller
             ->route('dragon-ownings.quick-create', [
                 'account' => $account,
                 'rarity' => $request->input('rarity'),
+                'page' => $request->input('page'),
+                'include_owned' => $request->input('include_owned'),
             ])
             ->with('success', $dragonIds->count() . ' dragon berhasil ditambahkan ke account.');
     }
