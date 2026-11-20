@@ -6,6 +6,7 @@ use App\Models\Account;
 use App\Models\Dragon;
 use App\Models\DragonOwningDetail;
 use App\Models\Element;
+use App\Models\OrbOwning;
 use App\Models\Rarity;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -125,6 +126,51 @@ class TargetDragonTest extends TestCase
         $response->assertSee('Aqua Dragon');
         $response->assertSee('Fire Dragon');
         $response->assertDontSee('Wind Dragon');
+    }
+
+    public function test_target_dragon_page_filters_by_rarity_rescue_and_collection_and_shows_owners_and_orbs(): void
+    {
+        $accountOne = Account::factory()->create(['account_name' => 'Account One']);
+        $owner = Account::factory()->create(['account_name' => 'Target Owner']);
+        $accountOne->forceFill(['id' => 1])->saveQuietly();
+        $rarity = Rarity::factory()->create(['name' => 'Legendary']);
+        $element = Element::factory()->create();
+
+        $matchingDragon = Dragon::factory()->create([
+            'dragon_name' => 'Matching Dragon',
+            'rarity_id' => $rarity->id,
+            'element_1_id' => $element->id,
+            'is_rescue' => true,
+            'is_collection' => true,
+        ]);
+        $nonMatchingDragon = Dragon::factory()->create([
+            'dragon_name' => 'Non Matching Dragon',
+            'rarity_id' => $rarity->id,
+            'element_1_id' => $element->id,
+            'is_rescue' => false,
+            'is_collection' => true,
+        ]);
+
+        DragonOwningDetail::create(['account_id' => $owner->id, 'dragon_id' => $matchingDragon->id]);
+        DragonOwningDetail::create(['account_id' => $owner->id, 'dragon_id' => $nonMatchingDragon->id]);
+        OrbOwning::create(['account_id' => $owner->id, 'dragon_id' => $matchingDragon->id, 'jumlah_orb' => 42]);
+
+        $response = $this->get(route('target-dragons.index', [
+            'account' => $owner->id,
+            'rarity' => $rarity->id,
+            'is_rescue' => '1',
+            'is_collection' => '1',
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertSee('id="target-dragons-table"', false);
+        $response->assertSee('<th>Pemilik</th>', false);
+        $response->assertSee('<th>Jumlah Orb</th>', false);
+        $response->assertSee('Matching Dragon');
+        $response->assertSee('Legendary');
+        $response->assertSee('Target Owner');
+        $response->assertSee('<td>42</td>', false);
+        $response->assertDontSee('Non Matching Dragon');
     }
 
     public function test_master_dragon_page_can_filter_by_rescue_and_collection_flags(): void

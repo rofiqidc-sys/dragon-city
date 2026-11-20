@@ -48,10 +48,9 @@ class UnownedDragonController extends Controller
                     ->when(isset($filters['is_collection']), fn (Builder $query) => $query->where('is_collection', $filters['is_collection']));
             })
             ->orderBy('dragon_id')
-            ->paginate(12)
-            ->withQueryString();
+            ->get();
 
-        $unownedDragons->getCollection()->transform(function ($unownedDragon) use ($accounts, $orbCounts) {
+        $unownedDragons->transform(function ($unownedDragon) use ($accounts, $orbCounts) {
             $dragon = $unownedDragon->dragon;
             $dragonOrbRecords = collect($orbCounts->get($dragon->id, []));
             $dragon->orb_details_by_account = $accounts

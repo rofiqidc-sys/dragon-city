@@ -36,6 +36,19 @@ class UnownedDragonTest extends TestCase
         $this->assertDatabaseMissing('unowned_dragons', ['dragon_id' => $owned->id]);
     }
 
+    public function test_unowned_dragons_page_includes_all_results_for_datatables_search(): void
+    {
+        foreach (range(1, 13) as $number) {
+            Dragon::factory()->create(['dragon_name' => "Unowned Dragon {$number}"]);
+        }
+
+        $response = $this->get(route('unowned-dragons.index'));
+
+        $response->assertOk()
+            ->assertSee('Unowned Dragon 13')
+            ->assertSee('unowned-dragons-table');
+    }
+
     public function test_unowned_dragons_page_hides_dragons_already_in_trading_tasks(): void
     {
         $trader = Account::factory()->create();

@@ -19,6 +19,7 @@ class OrbOwningController extends Controller
         $selectedOwnershipStatus = $request->query('owned_status');
         $selectedAccountOneOwnershipStatus = $request->query('account_one_owned_status');
         $selectedRescueStatus = $request->query('is_rescue');
+        $selectedCollectionStatus = $request->query('is_collection');
         $accounts = Account::orderBy('account_name')->get();
         $rarities = Rarity::orderBy('name')->get();
 
@@ -81,10 +82,16 @@ class OrbOwningController extends Controller
             ->when($selectedRescueStatus === 'no', function ($query) {
                 $query->where('dragons.is_rescue', false);
             })
+            ->when($selectedCollectionStatus === 'yes', function ($query) {
+                $query->where('dragons.is_collection', true);
+            })
+            ->when($selectedCollectionStatus === 'no', function ($query) {
+                $query->where('dragons.is_collection', false);
+            })
             ->orderBy('dragons.dragon_name')
             ->get();
 
-        return view('orb-ownings.index', compact('dragons', 'accounts', 'rarities', 'selectedAccountId', 'selectedRarityId', 'selectedOwnershipStatus', 'selectedAccountOneOwnershipStatus', 'selectedRescueStatus'));
+        return view('orb-ownings.index', compact('dragons', 'accounts', 'rarities', 'selectedAccountId', 'selectedRarityId', 'selectedOwnershipStatus', 'selectedAccountOneOwnershipStatus', 'selectedRescueStatus', 'selectedCollectionStatus'));
     }
 
     public function create()

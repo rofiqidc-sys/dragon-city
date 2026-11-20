@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Account;
 use App\Models\Dragon;
 use App\Models\OrbOwning;
+use App\Models\Rarity;
 use App\Models\TradingTask;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -19,6 +20,41 @@ class TradingTaskTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Trading Task List');
+        $response->assertSee('id="trading-tasks-table"', false);
+        $response->assertSee("$('#trading-tasks-table').DataTable({", false);
+        $response->assertSee('searchPlaceholder: \'Cari trading task...\'', false);
+    }
+
+    public function test_trading_tasks_index_renders_all_tasks_for_datatable_search(): void
+    {
+        $olderTask = TradingTask::factory()->create(['created_at' => now()->subDay()]);
+        TradingTask::factory()->count(16)->create();
+
+        $response = $this->get(route('trading-tasks.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee(route('trading-tasks.edit', $olderTask), false);
+    }
+
+    public function test_trading_tasks_index_shows_dragon_rarity_rescue_and_collection(): void
+    {
+        $rarity = Rarity::factory()->create(['name' => 'Legendary']);
+        $task = TradingTask::factory()->create();
+        $task->dragon->update([
+            'rarity_id' => $rarity->id,
+            'is_rescue' => true,
+            'is_collection' => false,
+        ]);
+
+        $response = $this->get(route('trading-tasks.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('<th>Rarity</th>', false);
+        $response->assertSee('<th>Rescue</th>', false);
+        $response->assertSee('<th>Collection</th>', false);
+        $response->assertSee('<td>Legendary</td>', false);
+        $response->assertSee('<td>Ya</td>', false);
+        $response->assertSee('<td>Tidak</td>', false);
     }
 
     public function test_create_and_edit_forms_use_dragon_autocomplete(): void

@@ -18,6 +18,32 @@ class OrbOwningTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_user_can_filter_orb_ownings_by_collection_status(): void
+    {
+        $collectionDragon = Dragon::factory()->create([
+            'dragon_name' => 'Collection Dragon',
+            'is_collection' => true,
+        ]);
+        Dragon::factory()->create([
+            'dragon_name' => 'Regular Dragon',
+            'is_collection' => false,
+        ]);
+
+        $response = $this->get(route('orb-ownings.index', ['is_collection' => 'yes']));
+
+        $response->assertOk()
+            ->assertSee('Collection Dragon')
+            ->assertDontSee('Regular Dragon')
+            ->assertSee('value="yes" selected', false);
+
+        $response = $this->get(route('orb-ownings.index', ['is_collection' => 'no']));
+
+        $response->assertOk()
+            ->assertSee('Regular Dragon')
+            ->assertDontSee('Collection Dragon')
+            ->assertSee('value="no" selected', false);
+    }
+
     public function test_user_can_create_and_store_orb_owning_entry(): void
     {
         $account = Account::factory()->create();

@@ -129,17 +129,27 @@ class DragonController extends Controller
     public function targetDragon(Request $request)
     {
         $accountId = 1;
-        $search = trim((string) $request->query('search', ''));
         $selectedRarity = $request->query('rarity');
         $selectedAccount = (int) $request->query('account', 0);
+        $selectedIsRescue = $request->query('is_rescue', '');
+        $selectedIsCollection = $request->query('is_collection', '');
         $rarities = Rarity::orderBy('name')->get();
-        $accounts = \App\Models\Account::orderBy('account_name')->get();
+        $accounts = Account::where('id', '!=', $accountId)->orderBy('account_name')->get();
 
         $targetDragonIds = DB::table('dragons as d')
             ->join('dragon_owning_details as dod', 'dod.dragon_id', '=', 'd.id')
             ->where('dod.account_id', '!=', $accountId)
             ->when($selectedAccount > 0, function ($query) use ($selectedAccount) {
                 $query->where('dod.account_id', $selectedAccount);
+            })
+            ->when($selectedRarity !== null && $selectedRarity !== '', function ($query) use ($selectedRarity) {
+                $query->where('d.rarity_id', $selectedRarity);
+            })
+            ->when($selectedIsRescue !== '', function ($query) use ($selectedIsRescue) {
+                $query->where('d.is_rescue', (bool) $selectedIsRescue);
+            })
+            ->when($selectedIsCollection !== '', function ($query) use ($selectedIsCollection) {
+                $query->where('d.is_collection', (bool) $selectedIsCollection);
             })
             ->whereNotExists(function ($query) use ($accountId) {
                 $query->from('dragon_owning_details as dod_owner')
@@ -151,26 +161,40 @@ class DragonController extends Controller
             ->pluck('dragon_id')
             ->all();
 
-        $dragons = Dragon::with('rarity', 'element1', 'element2', 'element3', 'element4')
+        $dragons = Dragon::with('rarity')
             ->whereIn('id', $targetDragonIds)
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($query) use ($search) {
-                    $pattern = '%' . Str::lower($search) . '%';
-                    $query->whereRaw('LOWER(dragon_name) LIKE ?', [$pattern])
-                        ->orWhereRaw('LOWER(dragon_book) LIKE ?', [$pattern])
-                        ->orWhereHas('rarity', fn ($rarityQuery) => $rarityQuery->whereRaw('LOWER(name) LIKE ?', [$pattern]));
-                });
-            })
-            ->when($selectedRarity, function ($query) use ($selectedRarity) {
-                $query->where('rarity_id', $selectedRarity);
-            })
             ->orderByRaw("CASE WHEN dragon_book ~ '^[0-9]+$' THEN 1 ELSE 0 END DESC")
             ->orderByRaw("LPAD(COALESCE(NULLIF(dragon_book, ''), '0'), 10, '0')")
             ->orderBy('dragon_name')
-            ->paginate(16)
-            ->withQueryString();
+            ->get();
 
-        return view('target-dragons.index', compact('dragons', 'rarities', 'accounts', 'search', 'selectedRarity', 'selectedAccount'));
+        $ownersByDragon = DB::table('dragon_owning_details as owning_details')
+            ->join('accounts', 'accounts.id', '=', 'owning_details.account_id')
+            ->leftJoin('orb_ownings', function ($join) {
+                $join->on('orb_ownings.dragon_id', '=', 'owning_details.dragon_id')
+                    ->on('orb_ownings.account_id', '=', 'owning_details.account_id');
+            })
+            ->whereIn('owning_details.dragon_id', $dragons->pluck('id'))
+            ->where('owning_details.account_id', '!=', $accountId)
+            ->when($selectedAccount > 0, function ($query) use ($selectedAccount) {
+                $query->where('owning_details.account_id', $selectedAccount);
+            })
+            ->select(
+                'owning_details.dragon_id',
+                'accounts.account_name',
+                DB::raw('COALESCE(SUM(orb_ownings.jumlah_orb), 0) as jumlah_orb')
+            )
+            ->groupBy('owning_details.dragon_id', 'owning_details.account_id', 'accounts.account_name')
+            ->get()
+            ->groupBy('dragon_id');
+
+        $dragons->each(function (Dragon $dragon) use ($ownersByDragon) {
+            $owners = $ownersByDragon->get($dragon->id, collect());
+            $dragon->setAttribute('target_owners', $owners->pluck('account_name')->implode(', '));
+            $dragon->setAttribute('target_jumlah_orb', $owners->sum('jumlah_orb'));
+        });
+
+        return view('target-dragons.index', compact('dragons', 'rarities', 'accounts', 'selectedRarity', 'selectedAccount', 'selectedIsRescue', 'selectedIsCollection'));
     }
 
     public function create()

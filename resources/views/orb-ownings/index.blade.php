@@ -80,6 +80,14 @@
                     <option value="no" {{ $selectedRescueStatus === 'no' ? 'selected' : '' }}>Bukan Rescue</option>
                 </select>
             </div>
+            <div class="col-md-3">
+                <label for="is_collection">Is Collection</label>
+                <select id="is_collection" name="is_collection" class="form-control" onchange="this.form.submit()">
+                    <option value="">-- Semua Collection Status --</option>
+                    <option value="yes" {{ $selectedCollectionStatus === 'yes' ? 'selected' : '' }}>Collection</option>
+                    <option value="no" {{ $selectedCollectionStatus === 'no' ? 'selected' : '' }}>Bukan Collection</option>
+                </select>
+            </div>
         </form>
     </div>
 </div>

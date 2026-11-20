@@ -14,9 +14,9 @@ class TradingTaskController extends Controller
 {
     public function index()
     {
-        $tradingTasks = TradingTask::with(['dragon', 'trader', 'reciever'])
+        $tradingTasks = TradingTask::with(['dragon.rarity', 'trader', 'reciever'])
             ->latest()
-            ->paginate(15);
+            ->get();
 
         return view('trading-tasks.index', compact('tradingTasks'));
     }

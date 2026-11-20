@@ -55,9 +55,9 @@
                     </div>
                 </form>
 
-                <p class="text-muted">Total: {{ $unownedDragons->total() }} dragon</p>
+                <p class="text-muted">Total: {{ $unownedDragons->count() }} dragon</p>
                 <div class="table-responsive">
-                    <table class="table table-hover table-bordered">
+                    <table id="unowned-dragons-table" class="table table-hover table-bordered" style="width: 100%;">
                         <thead>
                             <tr>
                                 <th>#</th>
@@ -71,10 +71,10 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($unownedDragons as $index => $unownedDragon)
+                            @foreach($unownedDragons as $unownedDragon)
                                 @php($dragon = $unownedDragon->dragon)
                                 <tr>
-                                    <td>{{ $unownedDragons->firstItem() + $index }}</td>
+                                    <td></td>
                                     <td>{{ $dragon->dragon_name }}</td>
                                     <td>{{ $dragon->dragon_book ?? '-' }}</td>
                                     <td>{{ $dragon->rarity->name ?? '-' }}</td>
@@ -95,17 +95,9 @@
                                         </button>
                                     </td>
                                 </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="8" class="text-center text-muted">Tidak ada dragon yang sesuai.</td>
-                                </tr>
-                            @endforelse
+                            @endforeach
                         </tbody>
                     </table>
-                </div>
-
-                <div class="d-flex justify-content-center mt-4">
-                    {{ $unownedDragons->links('pagination::bootstrap-4') }}
                 </div>
             </div>
         </div>
@@ -132,7 +124,13 @@
 </div>
 @endsection
 
+@push('styles')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css">
+@endpush
+
 @push('scripts')
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
 <script>
     function renderOrbSummaryModal(summary, dragonName) {
         let rows = [];
@@ -152,6 +150,27 @@
     }
 
     $(function () {
+        $('#unowned-dragons-table').DataTable({
+            autoWidth: false,
+            columnDefs: [
+                { orderable: false, searchable: false, targets: 0 }
+            ],
+            drawCallback: function () {
+                const table = this.api();
+                const start = table.page.info().start;
+
+                table.column(0, { page: 'current' }).nodes().each(function (cell, index) {
+                    cell.textContent = start + index + 1;
+                });
+            },
+            language: {
+                search: 'Cari:',
+                searchPlaceholder: 'Cari dragon...',
+                emptyTable: 'Tidak ada dragon yang sesuai.',
+                zeroRecords: 'Dragon yang dicari tidak ditemukan.'
+            }
+        });
+
         $('.info-orb-button').on('click', function () {
             const dragonName = $(this).data('dragon-name') || 'Dragon';
             const rawSummary = $(this).data('orb-summary');
