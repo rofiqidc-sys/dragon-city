@@ -140,99 +140,102 @@
         </div>
     </div>
 
-    <div class="col-md-12 col-xl-4">
-        <div class="card card-social">
-            <div class="card-block border-bottom">
-                <div class="row align-items-center justify-content-center">
-                    <div class="col-auto">
-                        <i class="fab fa-facebook-f text-primary f-36"></i>
-                    </div>
-                    <div class="col text-right">
-                        <h3>12,281</h3>
-                        <h5 class="text-c-blue mb-0">+7.2% <span class="text-muted">Total Likes</span></h5>
-                    </div>
-                </div>
-            </div>
-            <div class="card-block">
-                <div class="row align-items-center justify-content-center card-active">
-                    <div class="col-6">
-                        <h6 class="text-center m-b-10"><span class="text-muted m-r-5">Target:</span>35,098</h6>
-                        <div class="progress">
-                            <div class="progress-bar progress-c-blue" role="progressbar" style="width:60%;height:6px;" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div>
+    <div class="col-12">
+        <div class="row">
+            @foreach($rarities->take(3) as $rarity)
+                @php
+                    $rarityColor = $rarity['color'];
+                @endphp
+                <div class="col-md-6 col-lg-4 mb-3" data-rarity="{{ $rarity['name'] }}">
+                    <div class="card card-social h-100" style="border-top: 4px solid {{ $rarityColor }};">
+                        <div class="card-block border-bottom" style="background-color: {{ $rarityColor }}; color: {{ $rarity['text_color'] }};">
+                            <div class="row align-items-center justify-content-center">
+                                <div class="col-auto">
+                                    <i class="fas fa-dragon f-36"></i>
+                                </div>
+                                <div class="col text-right">
+                                    <h3 style="color: {{ $rarity['text_color'] }};">{{ number_format($rarity['total_dragons']) }}</h3>
+                                    <h5 class="mb-0">{{ $rarity['name'] }} <span style="opacity: .8;">Total Dragon</span></h5>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-block">
+                            <div class="row card-active">
+                                @foreach([
+                                    'Dimiliki' => ['key' => 'owned_dragons', 'color' => '#06D6A0'],
+                                    'On Going' => ['key' => 'ongoing_dragons', 'color' => '#FFD166'],
+                                    'Soon' => ['key' => 'soon_dragons', 'color' => '#FF7F50'],
+                                ] as $label => $status)
+                                    @php
+                                        $statusCount = $rarity[$status['key']];
+                                    @endphp
+                                    <div class="col-4 text-center" data-status="{{ $status['key'] }}" data-count="{{ $statusCount }}">
+                                        @if($rarity['id'])
+                                            <a href="{{ route('dashboard.rarity-details', ['rarityId' => $rarity['id'], 'status' => $status['key']]) }}" class="d-block text-reset text-decoration-none font-weight-bold" style="background-color: {{ $status['color'] }}; color: #212529; border-radius: 4px; padding: 10px 4px;">
+                                                <span class="sr-only">{{ $label }}</span>
+                                                {{ number_format($statusCount) }}
+                                            </a>
+                                        @else
+                                            <div class="font-weight-bold" style="background-color: {{ $status['color'] }}; color: #212529; border-radius: 4px; padding: 10px 4px;">
+                                                <span class="sr-only">{{ $label }}</span>
+                                                {{ number_format($statusCount) }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
                     </div>
-                    <div class="col-6">
-                        <h6 class="text-center  m-b-10"><span class="text-muted m-r-5">Duration:</span>350</h6>
-                        <div class="progress">
-                            <div class="progress-bar progress-c-green" role="progressbar" style="width:45%;height:6px;" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                    </div>
                 </div>
-            </div>
+            @endforeach
         </div>
-    </div>
-
-    <div class="col-md-6 col-xl-4">
-        <div class="card card-social">
-            <div class="card-block border-bottom">
-                <div class="row align-items-center justify-content-center">
-                    <div class="col-auto">
-                        <i class="fab fa-twitter text-c-info f-36"></i>
-                    </div>
-                    <div class="col text-right">
-                        <h3>11,200</h3>
-                        <h5 class="text-c-info mb-0">+6.2% <span class="text-muted">Total Likes</span></h5>
-                    </div>
-                </div>
-            </div>
-            <div class="card-block">
-                <div class="row align-items-center justify-content-center card-active">
-                    <div class="col-6">
-                        <h6 class="text-center m-b-10"><span class="text-muted m-r-5">Target:</span>34,185</h6>
-                        <div class="progress">
-                            <div class="progress-bar progress-c-blue" role="progressbar" style="width:40%;height:6px;" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100"></div>
+        <div class="row">
+            @foreach($rarities->slice(3) as $rarity)
+                @php
+                    $rarityColor = $rarity['color'];
+                @endphp
+                <div class="col-md-6 col-lg-3 mb-3" data-rarity="{{ $rarity['name'] }}">
+                    <div class="card card-social h-100" style="border-top: 4px solid {{ $rarityColor }};">
+                        <div class="card-block border-bottom" style="background-color: {{ $rarityColor }}; color: {{ $rarity['text_color'] }};">
+                            <div class="row align-items-center justify-content-center">
+                                <div class="col-auto">
+                                    <i class="fas fa-dragon f-36"></i>
+                                </div>
+                                <div class="col text-right">
+                                    <h3 style="color: {{ $rarity['text_color'] }};">{{ number_format($rarity['total_dragons']) }}</h3>
+                                    <h5 class="mb-0">{{ $rarity['name'] }} <span style="opacity: .8;">Total Dragon</span></h5>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-6">
-                        <h6 class="text-center  m-b-10"><span class="text-muted m-r-5">Duration:</span>800</h6>
-                        <div class="progress">
-                            <div class="progress-bar progress-c-green" role="progressbar" style="width:70%;height:6px;" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6 col-xl-4">
-        <div class="card card-social">
-            <div class="card-block border-bottom">
-                <div class="row align-items-center justify-content-center">
-                    <div class="col-auto">
-                        <i class="fab fa-google-plus-g text-c-red f-36"></i>
-                    </div>
-                    <div class="col text-right">
-                        <h3>10,500</h3>
-                        <h5 class="text-c-red mb-0">+5.9% <span class="text-muted">Total Likes</span></h5>
-                    </div>
-                </div>
-            </div>
-            <div class="card-block">
-                <div class="row align-items-center justify-content-center card-active">
-                    <div class="col-6">
-                        <h6 class="text-center m-b-10"><span class="text-muted m-r-5">Target:</span>25,998</h6>
-                        <div class="progress">
-                            <div class="progress-bar progress-c-blue" role="progressbar" style="width:80%;height:6px;" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <h6 class="text-center  m-b-10"><span class="text-muted m-r-5">Duration:</span>900</h6>
-                        <div class="progress">
-                            <div class="progress-bar progress-c-green" role="progressbar" style="width:50%;height:6px;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                        <div class="card-block">
+                            <div class="row card-active">
+                                @foreach([
+                                    'Dimiliki' => ['key' => 'owned_dragons', 'color' => '#06D6A0'],
+                                    'On Going' => ['key' => 'ongoing_dragons', 'color' => '#FFD166'],
+                                    'Soon' => ['key' => 'soon_dragons', 'color' => '#FF7F50'],
+                                ] as $label => $status)
+                                    @php
+                                        $statusCount = $rarity[$status['key']];
+                                    @endphp
+                                    <div class="col-4 text-center" data-status="{{ $status['key'] }}" data-count="{{ $statusCount }}">
+                                        @if($rarity['id'])
+                                            <a href="{{ route('dashboard.rarity-details', ['rarityId' => $rarity['id'], 'status' => $status['key']]) }}" class="d-block text-reset text-decoration-none font-weight-bold" style="background-color: {{ $status['color'] }}; color: #212529; border-radius: 4px; padding: 10px 4px;">
+                                                <span class="sr-only">{{ $label }}</span>
+                                                {{ number_format($statusCount) }}
+                                            </a>
+                                        @else
+                                            <div class="font-weight-bold" style="background-color: {{ $status['color'] }}; color: #212529; border-radius: 4px; padding: 10px 4px;">
+                                                <span class="sr-only">{{ $label }}</span>
+                                                {{ number_format($statusCount) }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            @endforeach
         </div>
     </div>
 

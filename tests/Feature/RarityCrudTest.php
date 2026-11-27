@@ -12,21 +12,26 @@ class RarityCrudTest extends TestCase
 
     public function test_user_can_update_rarity_seeder_from_database(): void
     {
+        $seederPath = base_path('database/seeders/RaritySeeder.php');
+        $originalSeeder = file_get_contents($seederPath);
         Rarity::factory()->create([
             'name' => 'Seeder Rarity',
             'alias' => 'sr',
             'key_need_to_summon' => 'seed-key',
         ]);
 
-        $response = $this->post(route('rarities.update-seeder'));
+        try {
+            $response = $this->post(route('rarities.update-seeder'));
 
-        $response->assertRedirect(route('rarities.index'));
-        $response->assertSessionHas('success', 'RaritySeeder berhasil diperbarui.');
+            $response->assertRedirect(route('rarities.index'));
+            $response->assertSessionHas('success', 'RaritySeeder berhasil diperbarui.');
 
-        $seederPath = base_path('database/seeders/RaritySeeder.php');
-        $this->assertFileExists($seederPath);
-        $this->assertStringContainsString("'name' => 'Seeder Rarity'", file_get_contents($seederPath));
-        $this->assertStringContainsString("'id' =>", file_get_contents($seederPath));
+            $this->assertFileExists($seederPath);
+            $this->assertStringContainsString("'name' => 'Seeder Rarity'", file_get_contents($seederPath));
+            $this->assertStringContainsString("'id' =>", file_get_contents($seederPath));
+        } finally {
+            file_put_contents($seederPath, $originalSeeder);
+        }
     }
 
     public function test_user_can_create_and_view_rarities(): void
@@ -39,6 +44,7 @@ class RarityCrudTest extends TestCase
             'alias' => 'Leg',
             'key_need_to_summon' => 'legendary-key',
             'orb_per_trade' => 25,
+            'color' => '#792CA2',
         ]);
 
         $response->assertRedirect('/rarities');
@@ -46,6 +52,7 @@ class RarityCrudTest extends TestCase
             'name' => 'Legendary',
             'alias' => 'Leg',
             'orb_per_trade' => 25,
+            'color' => '#792CA2',
         ]);
     }
 

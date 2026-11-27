@@ -22,21 +22,21 @@ class RarityController extends Controller
     public function updateSeeder()
     {
         $defaultRarities = [
-            ['id' => 1, 'name' => 'Common', 'alias' => 'c', 'key_need_to_summon' => null, 'orb_per_trade' => null],
-            ['id' => 2, 'name' => 'Rare', 'alias' => 'r', 'key_need_to_summon' => null, 'orb_per_trade' => null],
-            ['id' => 3, 'name' => 'Very Rare', 'alias' => 'vr', 'key_need_to_summon' => null, 'orb_per_trade' => null],
-            ['id' => 4, 'name' => 'Epic', 'alias' => 'e', 'key_need_to_summon' => null, 'orb_per_trade' => null],
-            ['id' => 5, 'name' => 'Legendary', 'alias' => 'l', 'key_need_to_summon' => null, 'orb_per_trade' => null],
-            ['id' => 6, 'name' => 'Mythical', 'alias' => 'm', 'key_need_to_summon' => null, 'orb_per_trade' => null],
-            ['id' => 7, 'name' => 'Heroic', 'alias' => 'h', 'key_need_to_summon' => null, 'orb_per_trade' => null],
-            ['id' => 8, 'name' => 'Divine', 'alias' => 'd', 'key_need_to_summon' => null, 'orb_per_trade' => null],
-            ['id' => 9, 'name' => 'Pure', 'alias' => 'p', 'key_need_to_summon' => null, 'orb_per_trade' => null],
-            ['id' => 10, 'name' => 'Ancient', 'alias' => 'an', 'key_need_to_summon' => null, 'orb_per_trade' => null],
-            ['id' => 11, 'name' => 'Mystic', 'alias' => 'me', 'key_need_to_summon' => null, 'orb_per_trade' => null],
+            ['id' => 1, 'name' => 'Common', 'alias' => 'c', 'key_need_to_summon' => null, 'orb_per_trade' => null, 'color' => '#F3F6F4'],
+            ['id' => 2, 'name' => 'Rare', 'alias' => 'r', 'key_need_to_summon' => null, 'orb_per_trade' => null, 'color' => '#FFCA88'],
+            ['id' => 3, 'name' => 'Very Rare', 'alias' => 'vr', 'key_need_to_summon' => null, 'orb_per_trade' => null, 'color' => '#66BB6A'],
+            ['id' => 4, 'name' => 'Epic', 'alias' => 'e', 'key_need_to_summon' => null, 'orb_per_trade' => null, 'color' => '#FFCC4D'],
+            ['id' => 5, 'name' => 'Legendary', 'alias' => 'l', 'key_need_to_summon' => null, 'orb_per_trade' => null, 'color' => '#792CA2'],
+            ['id' => 6, 'name' => 'Mythical', 'alias' => 'm', 'key_need_to_summon' => null, 'orb_per_trade' => null, 'color' => '#FA699E'],
+            ['id' => 7, 'name' => 'Heroic', 'alias' => 'h', 'key_need_to_summon' => null, 'orb_per_trade' => null, 'color' => '#F4BE38'],
+            ['id' => 8, 'name' => 'Divine', 'alias' => 'd', 'key_need_to_summon' => null, 'orb_per_trade' => null, 'color' => null],
+            ['id' => 9, 'name' => 'Pure', 'alias' => 'p', 'key_need_to_summon' => null, 'orb_per_trade' => null, 'color' => null],
+            ['id' => 10, 'name' => 'Ancient', 'alias' => 'an', 'key_need_to_summon' => null, 'orb_per_trade' => null, 'color' => null],
+            ['id' => 11, 'name' => 'Mystic', 'alias' => 'me', 'key_need_to_summon' => null, 'orb_per_trade' => null, 'color' => null],
         ];
 
         $rarities = Rarity::query()
-            ->select(['id', 'name', 'alias', 'key_need_to_summon', 'orb_per_trade'])
+            ->select(['id', 'name', 'alias', 'key_need_to_summon', 'orb_per_trade', 'color'])
             ->get();
 
         $payload = $rarities->isNotEmpty() ? $rarities->map(function ($rarity) {
@@ -46,6 +46,7 @@ class RarityController extends Controller
                 'alias' => $rarity->alias,
                 'key_need_to_summon' => $rarity->key_need_to_summon,
                 'orb_per_trade' => $rarity->orb_per_trade,
+                'color' => $rarity->color,
             ];
         })->values()->all() : $defaultRarities;
 
@@ -89,6 +90,7 @@ PHP;
             'alias' => 'nullable|string|max:255',
             'key_need_to_summon' => 'nullable|string|max:255',
             'orb_per_trade' => 'nullable|integer|min:0',
+            'color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
         ]);
 
         Rarity::create($request->all());
@@ -108,6 +110,7 @@ PHP;
             'alias' => 'nullable|string|max:255',
             'key_need_to_summon' => 'nullable|string|max:255',
             'orb_per_trade' => 'nullable|integer|min:0',
+            'color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
         ]);
 
         $rarity->update($request->all());

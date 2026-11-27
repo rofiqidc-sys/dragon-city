@@ -45,6 +45,10 @@
                         <label for="orb_per_trade">Orb Per Trade</label>
                         <input type="number" name="orb_per_trade" id="orb_per_trade" class="form-control" min="0" value="{{ old('orb_per_trade') }}">
                     </div>
+                    <div class="form-group">
+                        <label for="color">Color</label>
+                        <input type="color" name="color" id="color" class="form-control" value="{{ old('color', '#6c757d') }}">
+                    </div>
                     <button type="submit" class="btn btn-primary">Save</button>
                     <a href="{{ route('rarities.index') }}" class="btn btn-secondary">Cancel</a>
                 </form>

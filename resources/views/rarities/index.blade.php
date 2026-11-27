@@ -46,6 +46,7 @@
                                 <th>Alias</th>
                                 <th>Key Need To Summon</th>
                                 <th>Orb Per Trade</th>
+                                <th>Color</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -58,6 +59,13 @@
                                     <td>{{ $rarity->key_need_to_summon }}</td>
                                     <td>{{ $rarity->orb_per_trade }}</td>
                                     <td>
+                                        @if($rarity->color)
+                                            <span class="badge" style="background-color: {{ $rarity->color }}; color: #212529;">{{ $rarity->color }}</span>
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
+                                    <td>
                                         <a href="{{ route('rarities.edit', $rarity) }}" class="btn btn-sm btn-warning">Edit</a>
                                         <form action="{{ route('rarities.destroy', $rarity) }}" method="POST" style="display:inline;">
                                             @csrf
@@ -68,7 +76,7 @@
                                 </tr>
                             @empty
                                 <tr class="table-info">
-                                    <td colspan="6" class="text-center">No rarities found.</td>
+                                    <td colspan="7" class="text-center">No rarities found.</td>
                                 </tr>
                             @endforelse
                         </tbody>

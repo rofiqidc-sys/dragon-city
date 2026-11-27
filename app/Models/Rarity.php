@@ -14,6 +14,7 @@ class Rarity extends Model
         'alias',
         'key_need_to_summon',
         'orb_per_trade',
+        'color',
     ];
 
     protected $casts = [

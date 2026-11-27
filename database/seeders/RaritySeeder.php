@@ -12,64 +12,15 @@ class RaritySeeder extends Seeder
      */
     public function run(): void
     {
-                $rarities = array (
-    0 => 
-    array (
-        'id' => 1,
-        'name' => 'Common',
-        'alias' => 'c',
-        'key_need_to_summon' => NULL,
-        'orb_per_trade' => NULL,
-    ),
-    1 => 
-    array (
-        'id' => 2,
-        'name' => 'Rare',
-        'alias' => 'r',
-        'key_need_to_summon' => NULL,
-        'orb_per_trade' => NULL,
-    ),
-    2 => 
-    array (
-        'id' => 3,
-        'name' => 'Very Rare',
-        'alias' => 'vr',
-        'key_need_to_summon' => NULL,
-        'orb_per_trade' => NULL,
-    ),
-    3 => 
-    array (
-        'id' => 4,
-        'name' => 'Epic',
-        'alias' => 'e',
-        'key_need_to_summon' => NULL,
-        'orb_per_trade' => NULL,
-    ),
-    4 => 
-    array (
-        'id' => 5,
-        'name' => 'Legendary',
-        'alias' => 'l',
-        'key_need_to_summon' => NULL,
-        'orb_per_trade' => NULL,
-    ),
-    5 => 
-    array (
-        'id' => 6,
-        'name' => 'Mythical',
-        'alias' => 'm',
-        'key_need_to_summon' => NULL,
-        'orb_per_trade' => NULL,
-    ),
-    6 => 
-    array (
-        'id' => 7,
-        'name' => 'Heroic',
-        'alias' => 'h',
-        'key_need_to_summon' => NULL,
-        'orb_per_trade' => NULL,
-    ),
-);
+        $rarities = [
+            ['id' => 1, 'name' => 'Common', 'alias' => 'c', 'key_need_to_summon' => null, 'orb_per_trade' => null, 'color' => '#F3F6F4'],
+            ['id' => 2, 'name' => 'Rare', 'alias' => 'r', 'key_need_to_summon' => null, 'orb_per_trade' => null, 'color' => '#FFCA88'],
+            ['id' => 3, 'name' => 'Very Rare', 'alias' => 'vr', 'key_need_to_summon' => null, 'orb_per_trade' => null, 'color' => '#66BB6A'],
+            ['id' => 4, 'name' => 'Epic', 'alias' => 'e', 'key_need_to_summon' => null, 'orb_per_trade' => null, 'color' => '#FFCC4D'],
+            ['id' => 5, 'name' => 'Legendary', 'alias' => 'l', 'key_need_to_summon' => null, 'orb_per_trade' => null, 'color' => '#792CA2'],
+            ['id' => 6, 'name' => 'Mythical', 'alias' => 'm', 'key_need_to_summon' => null, 'orb_per_trade' => null, 'color' => '#FA699E'],
+            ['id' => 7, 'name' => 'Heroic', 'alias' => 'h', 'key_need_to_summon' => null, 'orb_per_trade' => null, 'color' => '#F4BE38'],
+        ];
 
         foreach ($rarities as $rarity) {
             Rarity::updateOrCreate(

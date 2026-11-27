@@ -13,6 +13,9 @@ use App\Http\Controllers\UnownedDragonController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/dashboard/rarities/{rarityId}/{status}', [HomeController::class, 'rarityDetails'])
+    ->whereNumber('rarityId')
+    ->name('dashboard.rarity-details');
 Route::post('/home/run-seeder', [HomeController::class, 'runSeeder'])->name('home.run-seeder');
 
 Route::get('/dragons/scrape', [DragonController::class, 'scrape'])->name('dragons.scrape');

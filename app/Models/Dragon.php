@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
+use App\Services\UnownedDragonSynchronizer;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use App\Services\UnownedDragonSynchronizer;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Dragon extends Model
 {
@@ -73,6 +73,11 @@ class Dragon extends Model
     public function dragonOwningDetails(): HasMany
     {
         return $this->hasMany(DragonOwningDetail::class);
+    }
+
+    public function orbOwnings(): HasMany
+    {
+        return $this->hasMany(OrbOwning::class);
     }
 
     public function collections(): BelongsToMany
